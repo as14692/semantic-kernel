@@ -273,4 +273,28 @@ public class AnthropicIOService : IBedrockModelIOService<IChatCompletionRequest,
 
         return converseRequest;
     }
+
+    /// <summary>
+    /// Builds the InvokeModelRequest body for text embedding generation requests.
+    /// This model does not support text embedding generation currently.
+    /// </summary>
+    /// <param name="data">The data to be passed into the request.</param>
+    /// <param name="modelId">The model for the request.</param>
+    /// <returns></returns>
+    public object GetEmbeddingRequestBody(string data, string modelId)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Extracts the embedding floats from the invoke model Bedrock runtime action response.
+    /// This model does not support text embedding generation currently.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
+    {
+        throw new NotImplementedException();
+    }
 }

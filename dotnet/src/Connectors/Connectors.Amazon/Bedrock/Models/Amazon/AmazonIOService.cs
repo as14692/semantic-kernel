@@ -16,7 +16,8 @@ namespace Connectors.Amazon.Models.Amazon;
 /// Input-output service for Amazon Titan model.
 /// </summary>
 public class AmazonIOService : IBedrockModelIOService<IChatCompletionRequest, IChatCompletionResponse>,
-    IBedrockModelIOService<ITextGenerationRequest, ITextGenerationResponse>
+    IBedrockModelIOService<ITextGenerationRequest, ITextGenerationResponse>,
+    IBedrockModelIOService<ITextEmbeddingRequest, ITextEmbeddingResponse>
 {
     /// <summary>
     /// Builds InvokeModel request Body parameter with structure as required by Amazon Titan.
@@ -209,5 +210,47 @@ public class AmazonIOService : IBedrockModelIOService<IChatCompletionRequest, IC
         };
 
         return converseStreamRequest;
+    }
+    /// <summary>
+    /// Builds the InvokeModelRequest body for text embedding generation requests.
+    /// </summary>
+    /// <param name="data">The data to be passed into the request.</param>
+    /// <param name="modelId">The model to be used for the request.</param>
+    /// <returns></returns>
+    public object GetEmbeddingRequestBody(string data, string modelId)
+    {
+        if (modelId.Contains("v1"))
+        {
+            return new TitanRequest.TitanTextEmbeddingRequest()
+            {
+                InputText = data
+            };
+        }
+        return new TitanRequest.TitanTextEmbeddingRequest()
+        {
+            InputText = data,
+            Dimensions = 512,
+            Normalize = true
+        };
+    }
+    /// <summary>
+    /// Extracts the embedding floats from the invoke model Bedrock runtime action response.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
+    {
+        using (var memoryStream = new MemoryStream())
+        {
+            response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
+            memoryStream.Position = 0;
+            using (var reader = new StreamReader(memoryStream))
+            {
+                var responseBody = JsonSerializer.Deserialize<TitanTextEmbeddingResponse>(reader.ReadToEnd());
+                var embedding = new ReadOnlyMemory<float>(responseBody?.Embedding.ToArray());
+                return embedding;
+            }
+        }
     }
 }

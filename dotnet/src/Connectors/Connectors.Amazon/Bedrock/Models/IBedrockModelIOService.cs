@@ -49,4 +49,17 @@ public interface IBedrockModelIOService<TRequest, TResponse>
     /// <param name="settings"></param>
     /// <returns></returns>
     public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings settings);
+    /// <summary>
+    /// Builds InvokeModelRequest Body parameter to be serialized for text embedding generation.
+    /// </summary>
+    /// <param name="data"></param>
+    /// /// <param name="modelId"></param>
+    /// <returns></returns>
+    object GetEmbeddingRequestBody(string data, string modelId);
+    /// <summary>
+    /// Gets the response from the invoke model to build text embedding generation response structure.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response);
 }

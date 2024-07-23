@@ -94,4 +94,20 @@ public static class TitanRequest
         /// <inheritdoc />
         public ToolConfiguration? ToolConfig { get; set; }
     }
+    /// <summary>
+    /// Request object for text embedding generation for Amazon Titan.
+    /// </summary>
+    public class TitanTextEmbeddingRequest : ITextEmbeddingRequest
+    {
+        [JsonPropertyName("inputText")]
+        public string InputText { get; set; }
+
+        [JsonPropertyName("dimensions")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? Dimensions { get; set; }
+
+        [JsonPropertyName("normalize")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? Normalize { get; set; }
+    }
 }

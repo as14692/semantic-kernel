@@ -2,7 +2,39 @@
 using Connectors.Amazon.Extensions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
+
+// ----------------------------TEXT EMBEDDING----------------------------
+Dictionary<int, string> embeddingModelOptions = new Dictionary<int, string>()
+{
+    { 1, "amazon.titan-embed-text-v2:0" },
+    { 2, "amazon.titan-embed-text-v1" },
+    { 3, "cohere.embed-english-v3"},
+    { 4, "cohere.embed-multilingual-v3"}
+};
+// Display the model options
+Console.WriteLine("Available models:");
+foreach (var option in embeddingModelOptions)
+{
+    Console.WriteLine($"{option.Key}. {option.Value}");
+}
+
+Console.Write("Enter the number of the model you want to use for chat completion: ");
+int chosenEmbeddingModel;
+while (!int.TryParse(Console.ReadLine(), out chosenEmbeddingModel) || !embeddingModelOptions.ContainsKey(chosenEmbeddingModel))
+{
+    Console.WriteLine("Invalid input. Please enter a valid number from the list.");
+    Console.Write("Enter the number of the model you want to use: ");
+}
+var embedKernel = Kernel.CreateBuilder().AddBedrockTextEmbeddingGenerationService(embeddingModelOptions[chosenEmbeddingModel]).Build();
+var textEmbeddingService = embedKernel.GetRequiredService<ITextEmbeddingGenerationService>();
+var textEmbedding = await textEmbeddingService.GenerateEmbeddingsAsync(["This is a sample text for embedding"]).ConfigureAwait(true);
+
+foreach (var embedding in textEmbedding)
+{
+    Console.WriteLine($"Generated embeddings: {string.Join(", ", embedding.Span.ToArray())}");
+}
 
 // ----------------------------CHAT COMPLETION----------------------------
 string userInput;
