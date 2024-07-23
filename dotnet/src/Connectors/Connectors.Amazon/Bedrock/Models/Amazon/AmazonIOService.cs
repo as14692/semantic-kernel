@@ -2,7 +2,6 @@
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime.Documents;
 using Connectors.Amazon.Core.Requests;
@@ -19,6 +18,7 @@ public class AmazonIOService : IBedrockModelIOService<IChatCompletionRequest, IC
     IBedrockModelIOService<ITextGenerationRequest, ITextGenerationResponse>,
     IBedrockModelIOService<ITextEmbeddingRequest, ITextEmbeddingResponse>
 {
+    private readonly BedrockUtilities _util = new();
     /// <summary>
     /// Builds InvokeModel request Body parameter with structure as required by Amazon Titan.
     /// </summary>
@@ -32,7 +32,7 @@ public class AmazonIOService : IBedrockModelIOService<IChatCompletionRequest, IC
         int? maxTokenCount = 512;
         List<string>? stopSequences = [];
 
-        if (executionSettings != null && executionSettings.ExtensionData != null)
+        if (executionSettings is { ExtensionData: not null })
         {
             executionSettings.ExtensionData.TryGetValue("temperature", out var temperatureValue);
             temperature = temperatureValue as double?;
@@ -91,21 +91,21 @@ public class AmazonIOService : IBedrockModelIOService<IChatCompletionRequest, IC
     /// <param name="chatHistory">The messages between assistant and user.</param>
     /// <param name="settings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings settings)
+    public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
         var titanRequest = new TitanRequest.TitanChatCompletionRequest
         {
             Messages = chatHistory.Select(m => new Message
             {
-                Role = MapRole(m.Role),
+                Role = new BedrockUtilities().MapRole(m.Role),
                 Content = new List<ContentBlock> { new() { Text = m.Content } }
             }).ToList(),
             System = new List<SystemContentBlock>(), // { new SystemContentBlock { Text = "You are an AI assistant." } },
             InferenceConfig = new InferenceConfiguration
             {
-                Temperature = this.GetExtensionDataValue(settings.ExtensionData, "temperature", 0.7f),
-                TopP = this.GetExtensionDataValue(settings.ExtensionData, "topP", 0.9f),
-                MaxTokens = this.GetExtensionDataValue(settings.ExtensionData, "maxTokenCount", 512),
+                Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", 0.7f),
+                TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "topP", 0.9f),
+                MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "maxTokenCount", 512),
             },
             AdditionalModelRequestFields = new Document(),
             AdditionalModelResponseFieldPaths = new List<string>()
@@ -122,40 +122,6 @@ public class AmazonIOService : IBedrockModelIOService<IChatCompletionRequest, IC
             ToolConfig = null // Set if needed
         };
         return converseRequest;
-    }
-
-    private TValue GetExtensionDataValue<TValue>(IDictionary<string, object>? extensionData, string key, TValue defaultValue)
-    {
-        if (extensionData == null || !extensionData.TryGetValue(key, out object? value))
-        {
-            return defaultValue;
-        }
-
-        if (value is TValue typedValue)
-        {
-            return typedValue;
-        }
-
-        return defaultValue;
-    }
-
-    private static ConversationRole MapRole(AuthorRole role)
-    {
-        string roleStr;
-        if (role == AuthorRole.User)
-        {
-            roleStr = "user";
-        }
-        else
-        {
-            roleStr = "assistant";
-        }
-        return roleStr switch
-        {
-            "user" => ConversationRole.User,
-            "assistant" => ConversationRole.Assistant,
-            _ => throw new ArgumentOutOfRangeException(nameof(role), $"Invalid role: {role}")
-        };
     }
     /// <summary>
     /// Extracts the text generation streaming output from the Amazon Titan response object structure.
@@ -177,21 +143,21 @@ public class AmazonIOService : IBedrockModelIOService<IChatCompletionRequest, IC
     /// <param name="chatHistory">The messages between assistant and user.</param>
     /// <param name="settings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings settings)
+    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
         var titanRequest = new TitanRequest.TitanChatCompletionRequest
         {
             Messages = chatHistory.Select(m => new Message
             {
-                Role = MapRole(m.Role),
+                Role = new BedrockUtilities().MapRole(m.Role),
                 Content = new List<ContentBlock> { new() { Text = m.Content } }
             }).ToList(),
             System = new List<SystemContentBlock>(), // { new SystemContentBlock { Text = "You are an AI assistant." } },
             InferenceConfig = new InferenceConfiguration
             {
-                Temperature = this.GetExtensionDataValue(settings.ExtensionData, "temperature", 0.7f),
-                TopP = this.GetExtensionDataValue(settings.ExtensionData, "topP", 0.9f),
-                MaxTokens = this.GetExtensionDataValue(settings.ExtensionData, "maxTokenCount", 512),
+                Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", 0.7f),
+                TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "topP", 0.9f),
+                MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "maxTokenCount", 512),
             },
             AdditionalModelRequestFields = new Document(),
             AdditionalModelResponseFieldPaths = new List<string>()
@@ -248,7 +214,7 @@ public class AmazonIOService : IBedrockModelIOService<IChatCompletionRequest, IC
             using (var reader = new StreamReader(memoryStream))
             {
                 var responseBody = JsonSerializer.Deserialize<TitanTextEmbeddingResponse>(reader.ReadToEnd());
-                var embedding = new ReadOnlyMemory<float>(responseBody?.Embedding.ToArray());
+                var embedding = new ReadOnlyMemory<float>(responseBody?.Embedding?.ToArray());
                 return embedding;
             }
         }

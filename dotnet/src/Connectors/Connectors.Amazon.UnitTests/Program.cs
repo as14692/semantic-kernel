@@ -1,15 +1,9 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿// Copyright (c) Microsoft. All rights reserved.
 
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
-using Connectors.Amazon.Models.Amazon;
 using Connectors.Amazon.Services;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.Amazon.Services;
 using Moq;
 
 Console.WriteLine("Hello, World!");
@@ -44,10 +38,6 @@ Console.WriteLine("Hello, World!");
 //     Console.Write(item.Text);
 //     result.Add(item);
 // }
-
-
-
-
 
 //
 // // Arrange
@@ -92,8 +82,6 @@ Console.WriteLine("Hello, World!");
 //     await asyncEnumerator.DisposeAsync();
 // }
 
-
-
 // string modelId = "amazon.titan-embed-text-v1:0";
 // var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
 // var test = new ContentBlockDeltaEvent()
@@ -122,7 +110,6 @@ Console.WriteLine("Hello, World!");
 //     output.Add(item);
 // }
 
-
 string modelId = "amazon.titan-text-premier-v1:0";
 string prompt = "Write a short greeting.";
 
@@ -136,7 +123,7 @@ mockBedrockApi.Setup(m => m.InvokeModelWithResponseStreamAsync(It.IsAny<InvokeMo
 var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
 
 // Act
-List<StreamingTextContent> result = new List<StreamingTextContent>();
+List<StreamingTextContent> result = new();
 var output = service.GetStreamingTextContentsAsync(prompt).ConfigureAwait(true);
 await foreach (var item in output)
 {

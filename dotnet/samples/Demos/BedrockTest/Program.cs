@@ -1,4 +1,6 @@
-﻿using Amazon;
+﻿// Copyright (c) Microsoft. All rights reserved.
+
+using Amazon;
 using Connectors.Amazon.Extensions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -6,7 +8,7 @@ using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
 
 // ----------------------------TEXT EMBEDDING----------------------------
-Dictionary<int, string> embeddingModelOptions = new Dictionary<int, string>()
+Dictionary<int, string> embeddingModelOptions = new()
 {
     { 1, "amazon.titan-embed-text-v2:0" },
     { 2, "amazon.titan-embed-text-v1" },
@@ -38,10 +40,10 @@ foreach (var embedding in textEmbedding)
 
 // ----------------------------CHAT COMPLETION----------------------------
 string userInput;
-ChatHistory chatHistory = new ChatHistory();
+ChatHistory chatHistory = new();
 
 // List of available models
-Dictionary<int, string> modelOptions = new Dictionary<int, string>()
+Dictionary<int, string> modelOptions = new()
 {
     { 1, "amazon.titan-text-premier-v1:0" },
     { 2, "anthropic.claude-3-sonnet-20240229-v1:0" },
@@ -94,7 +96,7 @@ do
 
 // ----------------------------TEXT GENERATION----------------------------
 // List of available text generation models
-Dictionary<int, string> textGenerationModelOptions = new Dictionary<int, string>()
+Dictionary<int, string> textGenerationModelOptions = new()
 {
     { 1, "amazon.titan-text-premier-v1:0" },
     { 2, "mistral.mistral-7b-instruct-v0:2" },
@@ -147,7 +149,7 @@ else
 
 // ----------------------------STREAM TEXT GENERATION----------------------------
 // List of available stream text generation models
-Dictionary<int, string> streamTextGenerationModelOptions = new Dictionary<int, string>()
+Dictionary<int, string> streamTextGenerationModelOptions = new()
 {
     { 1, "amazon.titan-text-premier-v1:0" },
     { 2, "anthropic.claude-v2" },
@@ -187,10 +189,10 @@ Console.WriteLine();
 
 // ----------------------------STREAM CHAT COMPLETION----------------------------
 string userInput2;
-ChatHistory chatHistory2 = new ChatHistory();
+ChatHistory chatHistory2 = new();
 
 // List of available stream chat completion models
-Dictionary<int, string> streamChatCompletionModelOptions = new Dictionary<int, string>()
+Dictionary<int, string> streamChatCompletionModelOptions = new()
 {
     { 1, "mistral.mistral-7b-instruct-v0:2" },
     { 2, "amazon.titan-text-premier-v1:0" },

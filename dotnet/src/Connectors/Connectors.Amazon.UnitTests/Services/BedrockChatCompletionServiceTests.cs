@@ -47,7 +47,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "Hello, world!" } }
+                        Content = new List<ContentBlock> { new() { Text = "Hello, world!" } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -86,7 +86,7 @@ public class BedrockChatCompletionServiceTests
         var chatHistory = new ChatHistory();
 
         // Act
-        List<StreamingChatMessageContent> output = new List<StreamingChatMessageContent>();
+        List<StreamingChatMessageContent> output = new();
         var result = service.GetStreamingChatMessageContentsAsync(chatHistory).ConfigureAwait(true);
 
         // Assert
@@ -137,7 +137,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "I'm doing well." } }
+                        Content = new List<ContentBlock> { new() { Text = "I'm doing well." } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -151,7 +151,7 @@ public class BedrockChatCompletionServiceTests
         var result = await service.GetChatMessageContentsAsync(chatHistory, executionSettings).ConfigureAwait(true);
 
         // Assert
-        ConverseRequest converseRequest = new ConverseRequest();
+        ConverseRequest converseRequest = new();
         var invocation = mockBedrockApi.Invocations
             .Where(i => i.Method.Name == "ConverseAsync")
             .SingleOrDefault(i => i.Arguments.Count > 0 && i.Arguments[0] is ConverseRequest);
@@ -182,7 +182,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "I'm doing well." } }
+                        Content = new List<ContentBlock> { new() { Text = "I'm doing well." } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -220,7 +220,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "I'm doing well." } }
+                        Content = new List<ContentBlock> { new() { Text = "I'm doing well." } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -234,7 +234,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.User,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "That's great to hear!" } }
+                        Content = new List<ContentBlock> { new() { Text = "That's great to hear!" } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -299,7 +299,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "sample" } }
+                        Content = new List<ContentBlock> { new() { Text = "sample" } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -339,7 +339,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "I'm doing well." } }
+                        Content = new List<ContentBlock> { new() { Text = "I'm doing well." } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -353,7 +353,7 @@ public class BedrockChatCompletionServiceTests
         var result = await service.GetChatMessageContentsAsync(chatHistory, executionSettings).ConfigureAwait(true);
 
         // Assert
-        ConverseRequest converseRequest = new ConverseRequest();
+        ConverseRequest converseRequest = new();
         var invocation = mockBedrockApi.Invocations
             .Where(i => i.Method.Name == "ConverseAsync")
             .SingleOrDefault(i => i.Arguments.Count > 0 && i.Arguments[0] is ConverseRequest);
@@ -394,7 +394,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "I'm doing well." } }
+                        Content = new List<ContentBlock> { new() { Text = "I'm doing well." } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -408,7 +408,7 @@ public class BedrockChatCompletionServiceTests
         var result = await service.GetChatMessageContentsAsync(chatHistory, executionSettings).ConfigureAwait(true);
 
         // Assert
-        ConverseRequest converseRequest = new ConverseRequest();
+        ConverseRequest converseRequest = new();
         var invocation = mockBedrockApi.Invocations
             .Where(i => i.Method.Name == "ConverseAsync")
             .SingleOrDefault(i => i.Arguments.Count > 0 && i.Arguments[0] is ConverseRequest);
@@ -449,7 +449,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "I'm doing well." } }
+                        Content = new List<ContentBlock> { new() { Text = "I'm doing well." } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -463,7 +463,7 @@ public class BedrockChatCompletionServiceTests
         var result = await service.GetChatMessageContentsAsync(chatHistory, executionSettings).ConfigureAwait(true);
 
         // Assert
-        ConverseRequest converseRequest = new ConverseRequest();
+        ConverseRequest converseRequest = new();
         var invocation = mockBedrockApi.Invocations
             .Where(i => i.Method.Name == "ConverseAsync")
             .SingleOrDefault(i => i.Arguments.Count > 0 && i.Arguments[0] is ConverseRequest);
@@ -504,7 +504,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "I'm doing well." } }
+                        Content = new List<ContentBlock> { new() { Text = "I'm doing well." } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -518,7 +518,7 @@ public class BedrockChatCompletionServiceTests
         var result = await service.GetChatMessageContentsAsync(chatHistory, executionSettings).ConfigureAwait(true);
 
         // Assert
-        ConverseRequest converseRequest = new ConverseRequest();
+        ConverseRequest converseRequest = new();
         var invocation = mockBedrockApi.Invocations
             .Where(i => i.Method.Name == "ConverseAsync")
             .SingleOrDefault(i => i.Arguments.Count > 0 && i.Arguments[0] is ConverseRequest);
@@ -559,7 +559,7 @@ public class BedrockChatCompletionServiceTests
                     Message = new Message
                     {
                         Role = ConversationRole.Assistant,
-                        Content = new List<ContentBlock> { new ContentBlock { Text = "I'm doing well." } }
+                        Content = new List<ContentBlock> { new() { Text = "I'm doing well." } }
                     }
                 },
                 Metrics = new ConverseMetrics(),
@@ -573,7 +573,7 @@ public class BedrockChatCompletionServiceTests
         var result = await service.GetChatMessageContentsAsync(chatHistory, executionSettings).ConfigureAwait(true);
 
         // Assert
-        ConverseRequest converseRequest = new ConverseRequest();
+        ConverseRequest converseRequest = new();
         var invocation = mockBedrockApi.Invocations
             .Where(i => i.Method.Name == "ConverseAsync")
             .SingleOrDefault(i => i.Arguments.Count > 0 && i.Arguments[0] is ConverseRequest);

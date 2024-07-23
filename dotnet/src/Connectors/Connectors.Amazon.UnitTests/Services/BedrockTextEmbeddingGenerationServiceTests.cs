@@ -6,7 +6,6 @@ using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Connectors.Amazon.Bedrock.Services;
 using Connectors.Amazon.Models.Amazon;
-using Connectors.Amazon.Services;
 using Microsoft.SemanticKernel.Services;
 using Moq;
 using Xunit;

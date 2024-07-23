@@ -7,7 +7,6 @@ using Connectors.Amazon.Core.Requests;
 using Connectors.Amazon.Core.Responses;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Embeddings;
 
 namespace Connectors.Amazon.Models.Cohere;
 
