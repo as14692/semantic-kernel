@@ -14,9 +14,7 @@ namespace Connectors.Amazon.Models.Amazon;
 /// <summary>
 /// Input-output service for Amazon Titan model.
 /// </summary>
-public class AmazonIOService : IBedrockModelIOService<IChatCompletionRequest, IChatCompletionResponse>,
-    IBedrockModelIOService<ITextGenerationRequest, ITextGenerationResponse>,
-    IBedrockModelIOService<ITextEmbeddingRequest, ITextEmbeddingResponse>
+public class AmazonIOService : IBedrockModelIOService
 {
     private readonly BedrockUtilities _util = new();
     /// <summary>

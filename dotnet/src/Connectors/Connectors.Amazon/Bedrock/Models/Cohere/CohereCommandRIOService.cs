@@ -4,8 +4,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime.Documents;
-using Connectors.Amazon.Core.Requests;
-using Connectors.Amazon.Core.Responses;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
@@ -14,8 +12,7 @@ namespace Connectors.Amazon.Models.Cohere;
 /// <summary>
 /// Input-output service for Cohere Command R.
 /// </summary>
-public class CohereCommandRIOService : IBedrockModelIOService<IChatCompletionRequest, IChatCompletionResponse>,
-    IBedrockModelIOService<ITextGenerationRequest, ITextGenerationResponse>
+public class CohereCommandRIOService : IBedrockModelIOService
 {
     private readonly BedrockUtilities _util = new BedrockUtilities();
     /// <summary>
@@ -195,58 +192,6 @@ public class CohereCommandRIOService : IBedrockModelIOService<IChatCompletionReq
             AdditionalModelResponseFieldPaths = new List<string>(),
             GuardrailConfig = null,
             ToolConfig = null
-            // Below is buggy attempt at trying to configure tool calling.
-            // ToolConfig = new ToolConfiguration
-            // {
-            //     Tools = new List<Tool>(cohereRequest.Tools.Select(t => new Tool
-            //     {
-            //         ToolSpec = new ToolSpecification
-            //         {
-            //             Name = t.Name,
-            //             Description = t.Description,
-            //             InputSchema = new ToolInputSchema
-            //             {
-            //                 Json = new Document(t.ParameterDefinitions.ToDictionary(kvp => kvp.Key, kvp => new Document
-            //                 {
-            //                     { "description", kvp.Value.Description },
-            //                     { "type", kvp.Value.Type },
-            //                     { "required", kvp.Value.Required }
-            //                 }))
-            //             }
-            //         }
-            //     })),
-            //     ToolChoice = cohereRequest.Tools?.Any() == true
-            //         ? new ToolChoice { Any = new AnyToolChoice() }
-            //         : new ToolChoice { Auto = new AutoToolChoice() }
-            // }
-
-            // ToolConfig = new Document
-            // {
-            //     { "tools", new Document(cohereRequest.Tools?.Select(t => new Document
-            //         {
-            //             { "name", t.Name },
-            //             { "description", t.Description },
-            //             { "parameter_definitions", new Document(t.ParameterDefinitions.Select(p => new KeyValuePair<string, Document>(p.Key, new Document
-            //                 {
-            //                     { "description", p.Value.Description },
-            //                     { "type", p.Value.Type },
-            //                     { "required", p.Value.Required }
-            //                 })).ToDictionary<KeyValuePair<string, Document>, string, Document>(kvp => kvp.Key, kvp => kvp.Value))
-            //             }
-            //         }).ToList() ?? new List<Document>())
-            //     },
-            //     { "tool_results", new Document(cohereRequest.ToolResults?.Select(tr => new Document
-            //         {
-            //             { "call", new Document
-            //                 {
-            //                     { "name", tr.Call.Name },
-            //                     { "parameters", new Document(tr.Call.Parameters.Select(p => new KeyValuePair<string, Document>(p.Key, new Document(p.Value))).ToDictionary<KeyValuePair<string, Document>, string, Document>(kvp => kvp.Key, kvp => kvp.Value)) }
-            //                 }
-            //             },
-            //             { "outputs", new Document(tr.Outputs) }
-            //         }).ToList() ?? new List<Document>())
-            //     }
-            // }
         };
 
         return converseRequest;
