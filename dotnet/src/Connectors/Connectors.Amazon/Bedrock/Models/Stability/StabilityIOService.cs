@@ -15,7 +15,7 @@ public class StabilityIOService : IBedrockModelIOService
 {
     private readonly BedrockModelUtilities _util = new();
     // Default values
-    private const float DefaultCfgScale = 7.0f;
+    private const int DefaultCfgScale = 7;
     private const int DefaultSamples = 1;
     private const int DefaultSeed = 0;
     private const int DefaultSteps = 30;
@@ -114,25 +114,22 @@ public class StabilityIOService : IBedrockModelIOService
         string stylePreset = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "stylePreset", string.Empty);
         // Dictionary<string, object>? extras = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "extras", null);
 
-        var requestBody = new
+        var requestBody = new StableDiffusionRequest.StableDiffusionInvokeRequest()
         {
-            text_prompts = new[]
+            TextPrompts = new List<StableDiffusionRequest.StableDiffusionInvokeRequest.TextPrompt>
             {
-                new
-                {
-                    text = description,
-                    // weight = 1.0f
-                }
+                new StableDiffusionRequest.StableDiffusionInvokeRequest.TextPrompt { Text = description }
             },
-            height,
-            width,
-            // cfg_scale = cfgScale,
-            // clip_guidance_preset = clipGuidancePreset,
-            // sampler,
-            // samples,
-            // seed,
-            // steps,
-            // style_preset = stylePreset
+            Height = height,
+            Width = width,
+            // CfgScale = cfgScale,
+            // ClipGuidancePreset = clipGuidancePreset,
+            // Sampler = sampler,
+            Samples = samples,
+            Seed = seed,
+            Steps = steps,
+            // StylePreset = stylePreset
+            // Extras = extras
         };
 
         return requestBody;

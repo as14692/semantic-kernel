@@ -25,54 +25,64 @@ public static class StableDiffusionRequest
         /// The value must be one of 1024x1024, 1152x896, 1216x832, 1344x768, 1536x640, 640x1536, 768x1344, 832x1216, 896x1152.
         /// </summary>
         [JsonPropertyName("height")]
-        public int Height { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? Height { get; set; }
         /// <summary>
         /// Width of the image to generate, in pixels, in an increment divible by 64.
         /// The value must be one of 1024x1024, 1152x896, 1216x832, 1344x768, 1536x640, 640x1536, 768x1344, 832x1216, 896x1152.
         /// </summary>
         [JsonPropertyName("width")]
-        public int Width { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? Width { get; set; }
         /// <summary>
         /// Determines how much the final image portrays the prompt. Use a lower number to increase randomness in the generation.
         /// </summary>
         [JsonPropertyName("cfg_scale")]
-        public float CfgScale { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? CfgScale { get; set; }
         /// <summary>
         /// Enum: FAST_BLUE, FAST_GREEN, NONE, SIMPLE SLOW, SLOWER, SLOWEST.
         /// </summary>
         [JsonPropertyName("clip_guidance_preset")]
-        public string ClipGuidancePreset { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? ClipGuidancePreset { get; set; }
         /// <summary>
         /// The sampler to use for the diffusion process. If this value is omitted, the model automatically selects an appropriate sampler for you.
         /// Enum: DDIM, DDPM, K_DPMPP_2M, K_DPMPP_2S_ANCESTRAL, K_DPM_2, K_DPM_2_ANCESTRAL, K_EULER, K_EULER_ANCESTRAL, K_HEUN K_LMS.
         /// </summary>
         [JsonPropertyName("sampler")]
-        public string Sampler { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Sampler { get; set; }
         /// <summary>
         /// The number of image to generate. Currently Amazon Bedrock supports generating one image. If you supply a value for samples, the value must be one.
         /// </summary>
         [JsonPropertyName("samples")]
-        public int Samples { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? Samples { get; set; }
         /// <summary>
         /// The seed determines the initial noise setting. Use the same seed and the same settings as a previous run to allow inference to create a similar image. If you don't set this value, or the value is 0, it is set as a random number.
         /// </summary>
         [JsonPropertyName("seed")]
-        public int Seed { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? Seed { get; set; }
         /// <summary>
         /// Generation step determines how many times the image is sampled. More steps can result in a more accurate result.
         /// </summary>
         [JsonPropertyName("steps")]
-        public int Steps { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? Steps { get; set; }
         /// <summary>
         /// A style preset that guides the image model towards a particular style. This list of style presets is subject to change.
         /// Enum: 3d-model, analog-film, anime, cinematic, comic-book, digital-art, enhance, fantasy-art, isometric, line-art, low-poly, modeling-compound, neon-punk, origami, photographic, pixel-art, tile-texture.
         /// </summary>
         [JsonPropertyName("style_preset")]
-        public string StylePreset { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? StylePreset { get; set; }
         /// <summary>
         /// Extra parameters passed to the engine. Use with caution. These parameters are used for in-development or experimental features and might change without warning.
         /// </summary>
         [JsonPropertyName("extras")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Dictionary<string, object>? Extras { get; set; }
         /// <summary>
         /// An array of text prompts to use for generation. Each element is a JSON object that contains a prompt and a weight for the prompt.
@@ -88,7 +98,8 @@ public static class StableDiffusionRequest
             /// The weight that the model should apply to the prompt. A value that is less than zero declares a negative prompt. Use a negative prompt to tell the model to avoid certain concepts. The default value for weight is one.
             /// </summary>
             [JsonPropertyName("weight")]
-            public float Weight { get; set; }
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            public float? Weight { get; set; }
         }
     }
 }

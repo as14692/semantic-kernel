@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Buffers.Text;
 using System.Text.Json.Serialization;
 using Connectors.Amazon.Core.Responses;
 
@@ -8,7 +9,7 @@ namespace Connectors.Amazon.Models.Stability;
 /// <summary>
 /// Represents the response from the Stable Diffusion service.
 /// </summary>
-public static class StableDiffusionResponse
+public class StableDiffusionResponse
 {
     /// <summary>
     /// Response for invoke.
