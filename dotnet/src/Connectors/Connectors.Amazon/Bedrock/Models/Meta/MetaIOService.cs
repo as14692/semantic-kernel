@@ -14,30 +14,24 @@ namespace Connectors.Amazon.Models.Meta;
 /// </summary>
 public class MetaIOService : IBedrockModelIOService
 {
-    private readonly BedrockUtilities _util = new BedrockUtilities();
+    private readonly BedrockModelUtilities _util = new();
+
+    // Define constants for default values
+    private const double DefaultTemperature = 0.5;
+    private const double DefaultTopP = 0.9;
+    private const int DefaultMaxGenLen = 512;
     /// <summary>
     /// Builds InvokeModel request Body parameter with structure as required by Meta Llama.
     /// </summary>
+    /// <param name="modelId">The model ID to be used as a request parameter.</param>
     /// <param name="prompt">The input prompt for text generation.</param>
     /// <param name="executionSettings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    public object GetInvokeModelRequestBody(string prompt, PromptExecutionSettings? executionSettings = null)
+    public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
-        double? temperature = 0.5; // Llama default
-        double? topP = 0.9; // Llama default
-        int? maxGenLen = 512; // Llama default
-
-        if (executionSettings is { ExtensionData: not null })
-        {
-            executionSettings.ExtensionData.TryGetValue("temperature", out var temperatureValue);
-            temperature = temperatureValue as double?;
-
-            executionSettings.ExtensionData.TryGetValue("top_p", out var topPValue);
-            topP = topPValue as double?;
-
-            executionSettings.ExtensionData.TryGetValue("max_gen_len", out var maxGenLenValue);
-            maxGenLen = maxGenLenValue as int?;
-        }
+        var temperature = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", (double?)DefaultTemperature);
+        var topP = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "top_p", (double?)DefaultTopP);
+        var maxGenLen = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "max_gen_len", (int?)DefaultMaxGenLen);
 
         var requestBody = new LlamaTextRequest.LlamaTextGenerationRequest
         {
@@ -83,34 +77,28 @@ public class MetaIOService : IBedrockModelIOService
     /// <returns></returns>
     public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
-        var llamaRequest = new LlamaChatRequest()
+        var messages = this._util.BuildMessageList(chatHistory);
+        var systemMessages = this._util.GetSystemMessages(chatHistory);
+
+        var inferenceConfig = new InferenceConfiguration
         {
-            Messages = chatHistory.Select(m => new Message
-            {
-                Role = new BedrockUtilities().MapRole(m.Role),
-                Content = new List<ContentBlock> { new() { Text = m.Content } }
-            }).ToList(),
-            System = new List<SystemContentBlock>(),
-            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", 0.5f),
-            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "top_p", 0.9f),
-            MaxGenLen = this._util.GetExtensionDataValue(settings?.ExtensionData, "max_gen_len", 512)
+            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
+            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
+            MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "max_gen_len", DefaultMaxGenLen)
         };
+
         var converseRequest = new ConverseRequest
         {
             ModelId = modelId,
-            Messages = llamaRequest.Messages,
-            System = llamaRequest.System,
-            InferenceConfig = new InferenceConfiguration
-            {
-                Temperature = (float)llamaRequest.Temperature,
-                TopP = (float)llamaRequest.TopP,
-                MaxTokens = llamaRequest.MaxGenLen
-            },
+            Messages = messages,
+            System = systemMessages,
+            InferenceConfig = inferenceConfig,
             AdditionalModelRequestFields = new Document(),
             AdditionalModelResponseFieldPaths = new List<string>(),
             GuardrailConfig = null,
             ToolConfig = null
         };
+
         return converseRequest;
     }
     /// <summary>
@@ -139,35 +127,29 @@ public class MetaIOService : IBedrockModelIOService
         ChatHistory chatHistory,
         PromptExecutionSettings? settings = null)
     {
-        var llamaRequest = new LlamaChatRequest
+        var messages = this._util.BuildMessageList(chatHistory);
+        var systemMessages = this._util.GetSystemMessages(chatHistory);
+
+        var inferenceConfig = new InferenceConfiguration
         {
-            Messages = chatHistory.Select(m => new Message
-            {
-                Role = new BedrockUtilities().MapRole(m.Role),
-                Content = new List<ContentBlock> { new() { Text = m.Content } }
-            }).ToList(),
-            System = new List<SystemContentBlock>(),
-            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", 0.5),
-            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "top_p", 0.9),
-            MaxGenLen = this._util.GetExtensionDataValue(settings?.ExtensionData, "max_gen_len", 512)
+            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
+            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
+            MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "max_gen_len", DefaultMaxGenLen)
         };
-        var converseStreamRequest = new ConverseStreamRequest
+
+        var converseRequest = new ConverseStreamRequest
         {
             ModelId = modelId,
-            Messages = llamaRequest.Messages,
-            System = llamaRequest.System,
-            InferenceConfig = new InferenceConfiguration
-            {
-                Temperature = (float)llamaRequest.Temperature,
-                TopP = (float)llamaRequest.TopP,
-                MaxTokens = llamaRequest.MaxGenLen
-            },
+            Messages = messages,
+            System = systemMessages,
+            InferenceConfig = inferenceConfig,
             AdditionalModelRequestFields = new Document(),
             AdditionalModelResponseFieldPaths = new List<string>(),
             GuardrailConfig = null,
             ToolConfig = null
         };
-        return converseStreamRequest;
+
+        return converseRequest;
     }
 
     /// <summary>

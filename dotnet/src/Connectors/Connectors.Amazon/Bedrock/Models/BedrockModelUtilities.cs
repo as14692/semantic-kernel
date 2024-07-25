@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using Amazon.BedrockRuntime;
+using Amazon.BedrockRuntime.Model;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace Connectors.Amazon.Models;
@@ -8,7 +9,7 @@ namespace Connectors.Amazon.Models;
 /// <summary>
 /// Utilities class for functions all Bedrock models need to use.
 /// </summary>
-public class BedrockUtilities
+public class BedrockModelUtilities
 {
     /// <summary>
     /// Maps the AuthorRole to the corresponding ConversationRole because AuthorRole is static and { readonly get; }.
@@ -28,6 +29,34 @@ public class BedrockUtilities
             return ConversationRole.Assistant;
         }
         throw new ArgumentOutOfRangeException(nameof(role), $"Invalid role: {role}");
+    }
+    /// <summary>
+    /// Gets the system messages from the ChatHistory and adds them to the ConverseRequest System parameter.
+    /// </summary>
+    /// <param name="chatHistory"></param>
+    /// <returns></returns>
+    public List<SystemContentBlock> GetSystemMessages(ChatHistory chatHistory)
+    {
+        return chatHistory
+            .Where(m => m.Role == AuthorRole.System)
+            .Select(m => new SystemContentBlock { Text = m.Content })
+            .ToList();
+    }
+    /// <summary>
+    /// Creates the list of user and assistant messages for the Converse Request from the Chat History.
+    /// </summary>
+    /// <param name="chatHistory"></param>
+    /// <returns></returns>
+    public List<Message> BuildMessageList(ChatHistory chatHistory)
+    {
+        return chatHistory
+            .Where(m => m.Role != AuthorRole.System)
+            .Select(m => new Message
+            {
+                Role = new BedrockModelUtilities().MapRole(m.Role),
+                Content = new List<ContentBlock> { new() { Text = m.Content } }
+            })
+            .ToList();
     }
     /// <summary>
     /// Gets the prompt execution settings extension data for the model request body build.

@@ -3,8 +3,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
-using Connectors.Amazon.Core.Requests;
-using Connectors.Amazon.Core.Responses;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
@@ -15,45 +13,28 @@ namespace Connectors.Amazon.Models.AI21;
 /// </summary>
 public class AI21JurassicIOService : IBedrockModelIOService
 {
+    private readonly BedrockModelUtilities _util = new();
+
+    // Defined constants for default values
+    private const double DefaultTemperature = 0.5;
+    private const double DefaultTopP = 0.5;
+    private const int DefaultMaxTokens = 200;
     /// <summary>
     /// Builds InvokeModelRequest Body parameter to be serialized.
     /// </summary>
+    /// <param name="modelId">The model ID to be used as a request parameter.</param>
     /// <param name="prompt">The input prompt for text generation.</param>
     /// <param name="executionSettings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    public object GetInvokeModelRequestBody(string prompt, PromptExecutionSettings? executionSettings = null)
+    public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
-        double? temperature = 0.5; // AI21 Jurassic default
-        double? topP = 0.5; // AI21 Jurassic default
-        int? maxTokens = 200; // AI21 Jurassic default
-        List<string>? stopSequences = null;
-        AI21JurassicRequest.CountPenalty? countPenalty = null;
-        AI21JurassicRequest.PresencePenalty? presencePenalty = null;
-        AI21JurassicRequest.FrequencyPenalty? frequencyPenalty = null;
-
-        if (executionSettings is { ExtensionData: not null })
-        {
-            executionSettings.ExtensionData.TryGetValue("temperature", out var temperatureValue);
-            temperature = temperatureValue as double?;
-
-            executionSettings.ExtensionData.TryGetValue("topP", out var topPValue);
-            topP = topPValue as double?;
-
-            executionSettings.ExtensionData.TryGetValue("maxTokens", out var maxTokensValue);
-            maxTokens = maxTokensValue as int?;
-
-            executionSettings.ExtensionData.TryGetValue("stopSequences", out var stopSequencesValue);
-            stopSequences = stopSequencesValue as List<string>;
-
-            executionSettings.ExtensionData.TryGetValue("countPenalty", out var countPenaltyValue);
-            countPenalty = countPenaltyValue as AI21JurassicRequest.CountPenalty;
-
-            executionSettings.ExtensionData.TryGetValue("presencePenalty", out var presencePenaltyValue);
-            presencePenalty = presencePenaltyValue as AI21JurassicRequest.PresencePenalty;
-
-            executionSettings.ExtensionData.TryGetValue("frequencyPenalty", out var frequencyPenaltyValue);
-            frequencyPenalty = frequencyPenaltyValue as AI21JurassicRequest.FrequencyPenalty;
-        }
+        var temperature = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", (double?)DefaultTemperature);
+        var topP = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "topP", (double?)DefaultTopP);
+        var maxTokens = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "maxTokens", (int?)DefaultMaxTokens);
+        var stopSequences = this._util.GetExtensionDataValue<List<string>>(executionSettings?.ExtensionData, "stopSequences", null);
+        var countPenalty = this._util.GetExtensionDataValue<AI21JurassicRequest.CountPenalty>(executionSettings?.ExtensionData, "countPenalty", null);
+        var presencePenalty = this._util.GetExtensionDataValue<AI21JurassicRequest.PresencePenalty>(executionSettings?.ExtensionData, "presencePenalty", null);
+        var frequencyPenalty = this._util.GetExtensionDataValue<AI21JurassicRequest.FrequencyPenalty>(executionSettings?.ExtensionData, "frequencyPenalty", null);
 
         var requestBody = new AI21JurassicRequest.AI21JurassicTextGenerationRequest()
         {
@@ -127,7 +108,7 @@ public class AI21JurassicIOService : IBedrockModelIOService
     /// <param name="settings"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings settings)
+    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
         throw new NotImplementedException();
     }

@@ -13,57 +13,35 @@ namespace Connectors.Amazon.Models.Cohere;
 /// </summary>
 public class CohereCommandIOService : IBedrockModelIOService
 {
+    private readonly BedrockModelUtilities _util = new();
+    // Define constants for default values
+    private const double DefaultTemperature = 0.9;
+    private const double DefaultTopP = 0.75;
+    private const int DefaultMaxTokens = 20;
+    private const double DefaultTopK = 0.0;
+    private const string DefaultReturnLikelihoods = "NONE";
+    private const bool DefaultStream = false;
+    private const int DefaultNumGenerations = 1;
+    private const string DefaultTruncate = "END";
     /// <summary>
     /// Builds InvokeModel request Body parameter with structure as required by Cohere Command.
     /// </summary>
+    /// <param name="modelId">The model ID to be used as a request parameter.</param>
     /// <param name="prompt">The input prompt for text generation.</param>
     /// <param name="executionSettings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    public object GetInvokeModelRequestBody(string prompt, PromptExecutionSettings? executionSettings = null)
+    public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
-        double? temperature = 0.9; // Cohere default
-        double? topP = 0.75; // Cohere default
-        int? maxTokens = 20; // Cohere default
-        List<string>? stopSequences = null;
-        double? topK = 0; // Cohere default
-        string? returnLikelihoods = "NONE"; // Cohere default
-        bool? stream = false; // Cohere default
-        int? numGenerations = 1; // Cohere default
-        Dictionary<int, double>? logitBias = null;
-        string? truncate = "END"; // Cohere default
-
-        if (executionSettings is { ExtensionData: not null })
-        {
-            executionSettings.ExtensionData.TryGetValue("temperature", out var temperatureValue);
-            temperature = temperatureValue as double?;
-
-            executionSettings.ExtensionData.TryGetValue("p", out var topPValue);
-            topP = topPValue as double?;
-
-            executionSettings.ExtensionData.TryGetValue("k", out var topKValue);
-            topK = topKValue as double?;
-
-            executionSettings.ExtensionData.TryGetValue("max_tokens", out var maxTokensValue);
-            maxTokens = maxTokensValue as int?;
-
-            executionSettings.ExtensionData.TryGetValue("stop_sequences", out var stopSequencesValue);
-            stopSequences = stopSequencesValue as List<string>;
-
-            executionSettings.ExtensionData.TryGetValue("return_likelihoods", out var returnLikelihoodsValue);
-            returnLikelihoods = returnLikelihoodsValue as string;
-
-            executionSettings.ExtensionData.TryGetValue("stream", out var streamValue);
-            stream = streamValue as bool?;
-
-            executionSettings.ExtensionData.TryGetValue("num_generations", out var numGenerationsValue);
-            numGenerations = numGenerationsValue as int?;
-
-            executionSettings.ExtensionData.TryGetValue("logit_bias", out var logitBiasValue);
-            logitBias = logitBiasValue as Dictionary<int, double>;
-
-            executionSettings.ExtensionData.TryGetValue("truncate", out var truncateValue);
-            truncate = truncateValue as string;
-        }
+        var temperature = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", (double?)DefaultTemperature);
+        var topP = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "p", (double?)DefaultTopP);
+        var topK = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "k", (double?)DefaultTopK);
+        var maxTokens = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "max_tokens", (int?)DefaultMaxTokens);
+        var stopSequences = this._util.GetExtensionDataValue<List<string>>(executionSettings?.ExtensionData, "stop_sequences", null);
+        var returnLikelihoods = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "return_likelihoods", DefaultReturnLikelihoods);
+        var stream = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "stream", (bool?)DefaultStream);
+        var numGenerations = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "num_generations", (int?)DefaultNumGenerations);
+        var logitBias = this._util.GetExtensionDataValue<Dictionary<int, double>>(executionSettings?.ExtensionData, "logit_bias", null);
+        var truncate = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "truncate", DefaultTruncate);
 
         var requestBody = new CommandTextRequest.CohereCommandTextGenerationRequest
         {
@@ -153,7 +131,7 @@ public class CohereCommandIOService : IBedrockModelIOService
     /// <param name="settings"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings settings)
+    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
         throw new NotImplementedException();
     }

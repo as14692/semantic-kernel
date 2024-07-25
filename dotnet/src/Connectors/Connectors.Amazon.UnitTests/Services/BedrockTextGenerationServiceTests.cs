@@ -3,15 +3,16 @@ using System.Text;
 using System.Text.Json;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
+using Connectors.Amazon.Extensions;
 using Connectors.Amazon.Models.AI21;
 using Connectors.Amazon.Models.Amazon;
 using Connectors.Amazon.Models.Anthropic;
 using Connectors.Amazon.Models.Cohere;
 using Connectors.Amazon.Models.Meta;
 using Connectors.Amazon.Models.Mistral;
-using Connectors.Amazon.Services;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Services;
+using Microsoft.SemanticKernel.TextGeneration;
 using Moq;
 using Xunit;
 
@@ -31,7 +32,8 @@ public class BedrockTextGenerationServiceTests
         // Arrange & Act
         string modelId = "amazon.titan-text-premier-v1:0";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextGenerationService>();
 
         // Assert
         Assert.Equal(modelId, service.Attributes[AIServiceExtensions.ModelIdKey]);
@@ -62,7 +64,8 @@ public class BedrockTextGenerationServiceTests
                 }))),
                 ContentType = "application/json"
             });
-        var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextGenerationService>();
         var prompt = "Write a greeting.";
 
         // Act
@@ -90,7 +93,8 @@ public class BedrockTextGenerationServiceTests
                 Body = new ResponseStream(new MemoryStream()),
                 ContentType = "application/json"
             });
-        var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextGenerationService>();
 
         // Act
         List<StreamingTextContent> result = new();
@@ -121,10 +125,10 @@ public class BedrockTextGenerationServiceTests
             ModelId = modelId,
             ExtensionData = new Dictionary<string, object>()
             {
-                { "temperature", 0.8 },
-                { "top_p", 0.95 },
-                { "max_tokens", 256 },
-                { "stop_sequences", new List<string> { "</end>" } }
+                { "temperature", 0.1f },
+                { "topP", 0.95f },
+                { "maxTokenCount", 256 },
+                { "stopSequences", new List<string> { "</end>" } }
             }
         };
         mockBedrockApi.Setup(m => m.InvokeModelAsync(It.IsAny<InvokeModelRequest>(), It.IsAny<CancellationToken>()))
@@ -144,7 +148,8 @@ public class BedrockTextGenerationServiceTests
                 }))),
                 ContentType = "application/json"
             });
-        var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextGenerationService>();
         var prompt = "Write a greeting.";
 
         // Act
@@ -169,23 +174,23 @@ public class BedrockTextGenerationServiceTests
         Assert.True(requestBodyRoot.TryGetProperty("textGenerationConfig", out var textGenerationConfig));
         if (textGenerationConfig.TryGetProperty("temperature", out var temperatureProperty))
         {
-            Assert.Equal(executionSettings.ExtensionData["temperature"], temperatureProperty.GetDouble());
+            Assert.Equal(executionSettings.ExtensionData["temperature"], (float)temperatureProperty.GetDouble());
         }
 
         if (textGenerationConfig.TryGetProperty("topP", out var topPProperty))
         {
-            Assert.Equal(executionSettings.ExtensionData["top_p"], topPProperty.GetDouble());
+            Assert.Equal(executionSettings.ExtensionData["topP"], (float)topPProperty.GetDouble());
         }
 
         if (textGenerationConfig.TryGetProperty("maxTokenCount", out var maxTokenCountProperty))
         {
-            Assert.Equal(executionSettings.ExtensionData["max_tokens"], maxTokenCountProperty.GetInt32());
+            Assert.Equal(executionSettings.ExtensionData["maxTokenCount"], maxTokenCountProperty.GetInt32());
         }
 
         if (textGenerationConfig.TryGetProperty("stopSequences", out var stopSequencesProperty))
         {
             var stopSequences = stopSequencesProperty.EnumerateArray().Select(e => e.GetString()).ToList();
-            Assert.Equal(executionSettings.ExtensionData["stop_sequences"], stopSequences);
+            Assert.Equal(executionSettings.ExtensionData["stopSequences"], stopSequences);
         }
     }
 
@@ -236,7 +241,8 @@ public class BedrockTextGenerationServiceTests
                 }))),
                 ContentType = "application/json"
             });
-        var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextGenerationService>();
         var prompt = "Write a greeting.";
 
         // Act
@@ -303,7 +309,8 @@ public class BedrockTextGenerationServiceTests
                 }))),
                 ContentType = "application/json"
             });
-        var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextGenerationService>();
         var prompt = "Write a greeting.\n\nHuman: \n\nAssistant:";
 
         // Act
@@ -378,7 +385,8 @@ public class BedrockTextGenerationServiceTests
                 }))),
                 ContentType = "application/json"
             });
-        var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextGenerationService>();
         var prompt = "Write a greeting.";
 
         // Act
@@ -444,7 +452,8 @@ public class BedrockTextGenerationServiceTests
                 }))),
                 ContentType = "application/json"
             });
-        var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextGenerationService>();
         var prompt = "Write a greeting.";
 
         // Act
@@ -510,7 +519,8 @@ public class BedrockTextGenerationServiceTests
                 }))),
                 ContentType = "application/json"
             });
-        var service = new BedrockTextGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextGenerationService>();
         var prompt = "Write a greeting.";
 
         // Act

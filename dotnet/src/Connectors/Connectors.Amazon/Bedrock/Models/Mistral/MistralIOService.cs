@@ -14,37 +14,34 @@ namespace Connectors.Amazon.Models.Mistral;
 /// </summary>
 public class MistralIOService : IBedrockModelIOService
 {
+    private readonly BedrockModelUtilities _util = new();
+    // Define constants for default values
+    private const float DefaultTemperatureInstruct = 0.5f;
+    private const float DefaultTopPInstruct = 0.9f;
+    private const int DefaultMaxTokensInstruct = 512;
+    private const int DefaultTopKInstruct = 50;
+    private static readonly List<string> DefaultStopSequencesInstruct = new();
+
+    private const float DefaultTemperatureNonInstruct = 0.7f;
+    private const float DefaultTopPNonInstruct = 1.0f;
+    private const int DefaultMaxTokensNonInstruct = 8192;
+    private const int DefaultTopKNonInstruct = 0;
+    private static readonly List<string> DefaultStopSequencesNonInstruct = new();
     /// <summary>
     /// Builds InvokeModel request Body parameter with structure as required by Mistral.
     /// </summary>
+    /// <param name="modelId">The model ID to be used as a request parameter.</param>
     /// <param name="prompt">The input prompt for text generation.</param>
     /// <param name="executionSettings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    public object GetInvokeModelRequestBody(string prompt, PromptExecutionSettings? executionSettings = null)
+    public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
-        double? temperature = 0.5f; // Mistral default [0.7 for the non-instruct versions. need to fix]
-        double? topP = 0.9f; // Mistral default
-        int? maxTokens = 512; // Mistral default [8192 for the non-instruct versions. need to fix]
-        List<string>? stop = null;
-        int? topK = 50; // Mistral default [disabled for non-instruct. likely just ignored since still functional]
-
-        if (executionSettings is { ExtensionData: not null })
-        {
-            executionSettings.ExtensionData.TryGetValue("temperature", out var temperatureValue);
-            temperature = temperatureValue as double?;
-
-            executionSettings.ExtensionData.TryGetValue("top_p", out var topPValue);
-            topP = topPValue as double?;
-
-            executionSettings.ExtensionData.TryGetValue("max_tokens", out var maxTokensValue);
-            maxTokens = maxTokensValue as int?;
-
-            executionSettings.ExtensionData.TryGetValue("stop", out var stopValue);
-            stop = stopValue as List<string>;
-
-            executionSettings.ExtensionData.TryGetValue("top_k", out var topKValue);
-            topK = topKValue as int?;
-        }
+        var isInstructModel = modelId.Contains("instruct", StringComparison.OrdinalIgnoreCase);
+        var temperature = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", isInstructModel ? (double?)DefaultTemperatureInstruct : (double?)DefaultTemperatureNonInstruct);
+        var topP = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "top_p", isInstructModel ? (double?)DefaultTopPInstruct : (double?)DefaultTopPNonInstruct);
+        var maxTokens = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "max_tokens", isInstructModel ? (int?)DefaultMaxTokensInstruct : (int?)DefaultMaxTokensNonInstruct);
+        var stop = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "stop", isInstructModel ? DefaultStopSequencesInstruct : DefaultStopSequencesNonInstruct);
+        var topK = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "top_k", isInstructModel ? (int?)DefaultTopKInstruct : (int?)DefaultTopKNonInstruct);
 
         var requestBody = new
         {
@@ -96,15 +93,13 @@ public class MistralIOService : IBedrockModelIOService
     {
         var mistralExecutionSettings = MistralAIPromptExecutionSettings.FromExecutionSettings(settings);
         var request = this.CreateChatCompletionRequest(modelId, false, chatHistory, mistralExecutionSettings, new Kernel());
+        var messages = this._util.BuildMessageList(chatHistory);
+        var systemMessages = this._util.GetSystemMessages(chatHistory);
         var converseRequest = new ConverseRequest
         {
             ModelId = modelId,
-            Messages = request.Messages.Select(m => new Message
-            {
-                Role = m.Role,
-                Content = new List<ContentBlock> { new() { Text = m.Content } }
-            }).ToList(),
-            System = new List<SystemContentBlock>(),
+            Messages = messages,
+            System = systemMessages,
             InferenceConfig = new InferenceConfiguration
             {
                 Temperature = (float)request.Temperature,
@@ -124,45 +119,11 @@ public class MistralIOService : IBedrockModelIOService
         MistralAIPromptExecutionSettings? executionSettings = null,
         Kernel? kernel = null)
     {
-        float defaultTemperature, defaultTopP;
-        int defaultMaxTokens, defaultTopK;
-
-        if (modelId.Contains("mistral-7b-instruct", StringComparison.OrdinalIgnoreCase))
-        {
-            defaultTemperature = 0.5f;
-            defaultTopP = 0.9f;
-            defaultMaxTokens = 512;
-            defaultTopK = 50;
-        }
-        else if (modelId.Contains("mixtral-8x7b-instruct", StringComparison.OrdinalIgnoreCase))
-        {
-            defaultTemperature = 0.5f;
-            defaultTopP = 0.9f;
-            defaultMaxTokens = 512;
-            defaultTopK = 50;
-        }
-        else if (modelId.Contains("mistral-large", StringComparison.OrdinalIgnoreCase))
-        {
-            defaultTemperature = 0.7f;
-            defaultTopP = 1.0f;
-            defaultMaxTokens = 8192;
-            defaultTopK = 0; // disabled
-        }
-        else if (modelId.Contains("mistral-small", StringComparison.OrdinalIgnoreCase))
-        {
-            defaultTemperature = 0.7f;
-            defaultTopP = 1.0f;
-            defaultMaxTokens = 8192;
-            defaultTopK = 0; // disabled
-        }
-        else
-        {
-            // Default values for other models or if model ID is not recognized
-            defaultTemperature = 0.7f;
-            defaultTopP = 1.0f;
-            defaultMaxTokens = 8192;
-            defaultTopK = 0; // disabled
-        }
+        var isInstructModel = modelId.Contains("instruct", StringComparison.OrdinalIgnoreCase);
+        float defaultTemperature = isInstructModel ? DefaultTemperatureInstruct : DefaultTemperatureNonInstruct;
+        float defaultTopP = isInstructModel ? DefaultTopPInstruct : DefaultTopPNonInstruct;
+        int defaultMaxTokens = isInstructModel ? DefaultMaxTokensInstruct : DefaultMaxTokensNonInstruct;
+        int defaultTopK = isInstructModel ? DefaultTopKInstruct : DefaultTopKNonInstruct;
 
         var request = new MistralRequest.MistralChatCompletionRequest(modelId)
         {
@@ -296,15 +257,13 @@ public class MistralIOService : IBedrockModelIOService
     {
         var mistralExecutionSettings = MistralAIPromptExecutionSettings.FromExecutionSettings(settings);
         var request = this.CreateChatCompletionRequest(modelId, false, chatHistory, mistralExecutionSettings, new Kernel());
+        var messages = this._util.BuildMessageList(chatHistory);
+        var systemMessages = this._util.GetSystemMessages(chatHistory);
         var converseStreamRequest = new ConverseStreamRequest()
         {
             ModelId = modelId,
-            Messages = request.Messages.Select(m => new Message
-            {
-                Role = m.Role,
-                Content = new List<ContentBlock> { new() { Text = m.Content } }
-            }).ToList(),
-            System = new List<SystemContentBlock>(),
+            Messages = messages,
+            System = systemMessages,
             InferenceConfig = new InferenceConfiguration
             {
                 Temperature = (float)request.Temperature,
