@@ -3,11 +3,10 @@
 using System.Text.Json;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
+using Connectors.Amazon.Bedrock.Core;
 using Connectors.Amazon.Core.Requests;
 using Connectors.Amazon.Core.Responses;
 using Connectors.Amazon.Models;
-using Connectors.Amazon.Models.Amazon;
-using Connectors.Amazon.Models.Cohere;
 
 namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 
@@ -33,28 +32,7 @@ public class BedrockTextEmbeddingClient<TRequest, TResponse>
     {
         this._modelId = modelId;
         this._bedrockApi = bedrockApi;
-        string[] parts = modelId.Split('.'); //modelId looks like "amazon.titan-embed-text-v1:0"
-        string modelProvider = parts[0];
-        string modelName = parts.Length > 1 ? parts[1] : string.Empty;
-        switch (modelProvider)
-        {
-            case "amazon":
-                if (modelName.StartsWith("titan-", StringComparison.OrdinalIgnoreCase))
-                {
-                    this._ioService = new AmazonIOService();
-                    break;
-                }
-                throw new ArgumentException($"Unsupported Amazon model: {modelId}");
-            case "cohere":
-                if (modelName.StartsWith("embed-", StringComparison.OrdinalIgnoreCase))
-                {
-                    this._ioService = new CohereEmbedIOService();
-                    break;
-                }
-                throw new ArgumentException($"Unsupported Cohere model: {modelId}");
-            default:
-                throw new ArgumentException($"Unsupported model provider: {modelProvider}");
-        }
+        this._ioService = new BedrockClientIOService().GetIOService(modelId);
     }
 
     /// <summary>
