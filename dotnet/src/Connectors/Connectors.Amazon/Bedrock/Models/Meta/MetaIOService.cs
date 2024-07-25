@@ -161,7 +161,7 @@ public class MetaIOService : IBedrockModelIOService
     /// <returns></returns>
     public object GetEmbeddingRequestBody(string data, string modelId)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Embedding not supported by this model.");
     }
 
     /// <summary>
@@ -173,7 +173,7 @@ public class MetaIOService : IBedrockModelIOService
     /// <exception cref="NotImplementedException"></exception>
     public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Embedding not supported by this model.");
     }
 
     /// <inheritdoc />

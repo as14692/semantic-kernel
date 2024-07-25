@@ -61,6 +61,10 @@ public class BedrockClientIOService
                 {
                     return new CohereCommandIOService();
                 }
+                if (modelName.StartsWith("embed-", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new CohereEmbedIOService();
+                }
                 throw new ArgumentException($"Unsupported Cohere model: {modelId}");
             case "meta":
                 if (modelName.StartsWith("llama3-", StringComparison.OrdinalIgnoreCase))
