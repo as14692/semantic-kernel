@@ -3,6 +3,7 @@
 using Connectors.Amazon.Extensions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
 
 // Display the available options
@@ -11,13 +12,14 @@ Console.WriteLine("1. Chat Completion");
 Console.WriteLine("2. Text Generation");
 Console.WriteLine("3. Stream Chat Completion");
 Console.WriteLine("4. Stream Text Generation");
+Console.WriteLine("5. Text Embedding");
 
-Console.Write("Enter your choice (1-4): ");
+Console.Write("Enter your choice (1-5): ");
 int choice;
-while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > 4)
+while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > 5)
 {
     Console.WriteLine("Invalid input. Please enter a valid number from the list.");
-    Console.Write("Enter your choice (1-4): ");
+    Console.Write("Enter your choice (1-5): ");
 }
 
 switch (choice)
@@ -229,5 +231,42 @@ switch (choice)
         }
 
         Console.WriteLine();
+        break;
+    case 5:
+        // ----------------------------TEXT EMBEDDING----------------------------
+        Dictionary<int, string> embeddingModelOptions = new()
+        {
+            { 1, "amazon.titan-embed-text-v2:0" },
+            { 2, "amazon.titan-embed-text-v1" },
+            { 3, "cohere.embed-english-v3" },
+            { 4, "cohere.embed-multilingual-v3" }
+        };
+        // Display the model options
+        Console.WriteLine("Available models:");
+        foreach (var option in embeddingModelOptions)
+        {
+            Console.WriteLine($"{option.Key}. {option.Value}");
+        }
+
+        Console.Write("Enter the number of the model you want to use for text embedding: ");
+        int chosenEmbeddingModel;
+        while (!int.TryParse(Console.ReadLine(), out chosenEmbeddingModel) || !embeddingModelOptions.ContainsKey(chosenEmbeddingModel))
+        {
+            Console.WriteLine("Invalid input. Please enter a valid number from the list.");
+            Console.Write("Enter the number of the model you want to use: ");
+        }
+
+        Console.Write("Enter the text you want to embed: ");
+        string inputText = Console.ReadLine() ?? "";
+
+        var embedKernel = Kernel.CreateBuilder().AddBedrockTextEmbeddingGenerationService(embeddingModelOptions[chosenEmbeddingModel]).Build();
+        var textEmbeddingService = embedKernel.GetRequiredService<ITextEmbeddingGenerationService>();
+        var textEmbedding = await textEmbeddingService.GenerateEmbeddingsAsync(new[] { inputText }).ConfigureAwait(true);
+
+        foreach (var embedding in textEmbedding)
+        {
+            Console.WriteLine($"Generated embeddings: {string.Join(", ", embedding.Span.ToArray())}");
+        }
+
         break;
 }

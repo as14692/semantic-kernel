@@ -22,7 +22,7 @@ public class BedrockTextEmbeddingClient<TRequest, TResponse>
 {
     private readonly string _modelId;
     private readonly IAmazonBedrockRuntime _bedrockApi;
-    private readonly IBedrockModelIOService<ITextEmbeddingRequest, ITextEmbeddingResponse> _ioService;
+    private readonly IBedrockModelIOService _ioService;
     /// <summary>
     /// Builds the client object and registers the model input-output service given the user's passed in model ID.
     /// </summary>

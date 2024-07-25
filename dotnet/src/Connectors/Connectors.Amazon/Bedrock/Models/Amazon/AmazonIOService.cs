@@ -4,8 +4,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime.Documents;
-using Connectors.Amazon.Core.Requests;
-using Connectors.Amazon.Core.Responses;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 

@@ -13,15 +13,16 @@ namespace Connectors.Amazon.Models.Cohere;
 /// <summary>
 /// Embedding input-output service for Cohere. Cohere-embed is not a Command or Command R model so is differentiated as a service.
 /// </summary>
-public class CohereEmbedIOService : IBedrockModelIOService<ITextEmbeddingRequest, ITextEmbeddingResponse>
+public class CohereEmbedIOService : IBedrockModelIOService
 {
     /// <summary>
     /// This class is just for embedding.
     /// </summary>
+    /// <param name="modelId">The model.</param>
     /// <param name="prompt">The input prompt for text generation.</param>
     /// <param name="executionSettings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    public object GetInvokeModelRequestBody(string prompt, PromptExecutionSettings? executionSettings = null)
+    public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
         throw new NotImplementedException();
     }
@@ -65,7 +66,7 @@ public class CohereEmbedIOService : IBedrockModelIOService<ITextEmbeddingRequest
     /// <param name="settings"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings settings)
+    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
         throw new NotImplementedException();
     }

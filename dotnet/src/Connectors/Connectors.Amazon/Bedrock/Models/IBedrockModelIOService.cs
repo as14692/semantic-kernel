@@ -47,7 +47,7 @@ public interface IBedrockModelIOService
     /// <param name="chatHistory"></param>
     /// <param name="settings"></param>
     /// <returns></returns>
-    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings settings);
+    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null);
     /// <summary>
     /// Builds InvokeModelRequest Body parameter to be serialized for text embedding generation.
     /// </summary>
@@ -61,5 +61,4 @@ public interface IBedrockModelIOService
     /// <param name="response"></param>
     /// <returns></returns>
     ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response);
-    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null);
 }
