@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using Connectors.Amazon.Extensions;
+using Connectors.Amazon.Models.Stability;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
+using Microsoft.SemanticKernel.TextToImage;
 
 // Display the available options
 Console.WriteLine("Choose an option:");
@@ -13,13 +15,14 @@ Console.WriteLine("2. Text Generation");
 Console.WriteLine("3. Stream Chat Completion");
 Console.WriteLine("4. Stream Text Generation");
 Console.WriteLine("5. Text Embedding");
+Console.WriteLine("6. Text To Image");
 
-Console.Write("Enter your choice (1-5): ");
+Console.Write("Enter your choice (1-6): ");
 int choice;
-while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > 5)
+while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > 6)
 {
     Console.WriteLine("Invalid input. Please enter a valid number from the list.");
-    Console.Write("Enter your choice (1-5): ");
+    Console.Write("Enter your choice (1-6): ");
 }
 
 switch (choice)
@@ -266,6 +269,54 @@ switch (choice)
         foreach (var embedding in textEmbedding)
         {
             Console.WriteLine($"Generated embeddings: {string.Join(", ", embedding.Span.ToArray())}");
+        }
+
+        break;
+    case 6:
+        // ----------------------------TEXT TO IMAGE----------------------------
+        Dictionary<int, string> textToImageModelOptions = new()
+        {
+            { 1, "stability.stable-diffusion-xl-v1" }
+        };
+        // Display the text-to-image model options
+        Console.WriteLine("Available text-to-image models:");
+        foreach (var option in textToImageModelOptions)
+        {
+            Console.WriteLine($"{option.Key}. {option.Value}");
+        }
+
+        Console.Write("Enter the number of the text-to-image model you want to use: ");
+        int chosenTextToImageModel;
+        while (!int.TryParse(Console.ReadLine(), out chosenTextToImageModel) || !textToImageModelOptions.ContainsKey(chosenTextToImageModel))
+        {
+            Console.WriteLine("Invalid input. Please enter a valid number from the list.");
+            Console.Write("Enter the number of the text-to-image model you want to use: ");
+        }
+
+        Console.Write("Enter the text prompt for image generation: ");
+        string textPrompt = Console.ReadLine() ?? "";
+
+        Console.Write("Enter the desired image width: ");
+        string width = Console.ReadLine() ?? "";
+
+        Console.Write("Enter the desired image height: ");
+        string height = Console.ReadLine() ?? "";
+
+        var textToImageKernel = Kernel.CreateBuilder()
+            .AddBedrockTextToImageService(textToImageModelOptions[chosenTextToImageModel])
+            .Build();
+
+        var textToImageService = textToImageKernel.GetRequiredService<ITextToImageService>();
+
+        var imageData = await textToImageService.GenerateImageAsync(textPrompt, int.Parse(width), int.Parse(height)).ConfigureAwait(true);
+        if (!string.IsNullOrEmpty(imageData))
+        {
+            Console.WriteLine("Image generation successful. Base64 image data:");
+            Console.WriteLine(imageData); //https://base64.guru/converter/decode/image
+        }
+        else
+        {
+            Console.WriteLine("Image generation failed.");
         }
 
         break;

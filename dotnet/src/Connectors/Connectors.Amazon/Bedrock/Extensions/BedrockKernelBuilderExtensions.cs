@@ -9,6 +9,7 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.Amazon.Services;
 using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
+using Microsoft.SemanticKernel.TextToImage;
 
 namespace Connectors.Amazon.Extensions;
 
@@ -176,6 +177,28 @@ public static class BedrockKernelBuilderExtensions
             catch (Exception ex)
             {
                 throw new KernelException($"An error occurred while initializing the BedrockTextEmbeddingGenerationService: {ex.Message}", ex);
+            }
+        });
+
+        return builder;
+    }
+
+    public static IKernelBuilder AddBedrockTextToImageService(
+        this IKernelBuilder builder,
+        string modelId)
+    {
+        // Add IAmazonBedrockRuntime service client to the DI container
+        builder.Services.AddAWSService<IAmazonBedrockRuntime>();
+        builder.Services.AddSingleton<ITextToImageService>(services =>
+        {
+            try
+            {
+                var bedrockRuntime = services.GetRequiredService<IAmazonBedrockRuntime>();
+                return new BedrockTextToImageService(modelId, bedrockRuntime);
+            }
+            catch (Exception ex)
+            {
+                throw new KernelException($"An error occurred while initializing the BedrockTextToImageService: {ex.Message}", ex);
             }
         });
 

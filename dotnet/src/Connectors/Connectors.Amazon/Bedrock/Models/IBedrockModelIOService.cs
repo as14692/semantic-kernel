@@ -61,4 +61,27 @@ public interface IBedrockModelIOService
     /// <param name="response"></param>
     /// <returns></returns>
     ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response);
+
+    /// <summary>
+    /// Get Invoke Request Body For TextToImage service.
+    /// </summary>
+    /// <param name="modelId"></param>
+    /// <param name="description"></param>
+    /// <param name="width"></param>
+    /// <param name="height"></param>
+    /// <param name="executionSettings"></param>
+    /// <returns></returns>
+    public object GetInvokeRequestBodyForTextToImage(
+        string modelId,
+        string description,
+        int width,
+        int height,
+        PromptExecutionSettings? executionSettings = null);
+
+    /// <summary>
+    /// Get the Base64 string output image result from the InvokeModelResponse for TextToImage service.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    string GetInvokeResponseForImage(InvokeModelResponse response);
 }

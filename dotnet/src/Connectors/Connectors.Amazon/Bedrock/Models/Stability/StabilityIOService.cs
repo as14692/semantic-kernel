@@ -6,19 +6,19 @@ using Amazon.BedrockRuntime.Model;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace Connectors.Amazon.Models.AI21;
+namespace Connectors.Amazon.Models.Stability;
 
 /// <summary>
-/// Input-output service for AI21 Labs Jurassic.
+/// StabilityIOService class for handling StabilityIO requests and responses.
 /// </summary>
-public class AI21JurassicIOService : IBedrockModelIOService
+public class StabilityIOService : IBedrockModelIOService
 {
     private readonly BedrockModelUtilities _util = new();
-
-    // Defined constants for default values
-    private const double DefaultTemperature = 0.5;
-    private const double DefaultTopP = 0.5;
-    private const int DefaultMaxTokens = 200;
+    // Default values
+    private const float DefaultCfgScale = 7.0f;
+    private const int DefaultSamples = 1;
+    private const int DefaultSeed = 0;
+    private const int DefaultSteps = 30;
     /// <summary>
     /// Builds InvokeModelRequest Body parameter to be serialized.
     /// </summary>
@@ -28,27 +28,7 @@ public class AI21JurassicIOService : IBedrockModelIOService
     /// <returns></returns>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
-        var temperature = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", (double?)DefaultTemperature);
-        var topP = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "topP", (double?)DefaultTopP);
-        var maxTokens = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "maxTokens", (int?)DefaultMaxTokens);
-        var stopSequences = this._util.GetExtensionDataValue<List<string>>(executionSettings?.ExtensionData, "stopSequences", null);
-        var countPenalty = this._util.GetExtensionDataValue<AI21JurassicRequest.CountPenalty>(executionSettings?.ExtensionData, "countPenalty", null);
-        var presencePenalty = this._util.GetExtensionDataValue<AI21JurassicRequest.PresencePenalty>(executionSettings?.ExtensionData, "presencePenalty", null);
-        var frequencyPenalty = this._util.GetExtensionDataValue<AI21JurassicRequest.FrequencyPenalty>(executionSettings?.ExtensionData, "frequencyPenalty", null);
-
-        var requestBody = new AI21JurassicRequest.AI21JurassicTextGenerationRequest()
-        {
-            Prompt = prompt,
-            Temperature = temperature,
-            TopP = topP,
-            MaxTokens = maxTokens,
-            StopSequences = stopSequences,
-            CountPenalty = countPenalty,
-            PresencePenalty = presencePenalty,
-            FrequencyPenalty = frequencyPenalty
-        };
-
-        return requestBody;
+        throw new NotImplementedException();
     }
     /// <summary>
     /// Extracts the test contents from the InvokeModelResponse as returned by the Bedrock API.
@@ -57,26 +37,7 @@ public class AI21JurassicIOService : IBedrockModelIOService
     /// <returns></returns>
     public IReadOnlyList<TextContent> GetInvokeResponseBody(InvokeModelResponse response)
     {
-        using (var memoryStream = new MemoryStream())
-        {
-            response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-            memoryStream.Position = 0;
-            using (var reader = new StreamReader(memoryStream))
-            {
-                var responseBody = JsonSerializer.Deserialize<AI21JurassicResponse>(reader.ReadToEnd());
-                var textContents = new List<TextContent>();
-
-                if (responseBody?.Completions != null && responseBody.Completions.Count > 0)
-                {
-                    foreach (var completion in responseBody.Completions)
-                    {
-                        textContents.Add(new TextContent(completion.Data?.Text));
-                    }
-                }
-
-                return textContents;
-            }
-        }
+        throw new NotImplementedException();
     }
     /// <summary>
     /// Jurassic does not support converse.
@@ -136,9 +97,7 @@ public class AI21JurassicIOService : IBedrockModelIOService
     {
         throw new NotImplementedException();
     }
-
     /// <inheritdoc />
-    /// Not supported by this model.
     public object GetInvokeRequestBodyForTextToImage(
         string modelId,
         string description,
@@ -146,13 +105,60 @@ public class AI21JurassicIOService : IBedrockModelIOService
         int height,
         PromptExecutionSettings? executionSettings = null)
     {
-        throw new NotImplementedException();
+        float cfgScale = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "cfgScale", DefaultCfgScale);
+        string clipGuidancePreset = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "clipGuidancePreset", string.Empty);
+        string sampler = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "sampler", string.Empty);
+        int samples = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "samples", DefaultSamples);
+        int seed = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "seed", DefaultSeed);
+        int steps = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "steps", DefaultSteps);
+        string stylePreset = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "stylePreset", string.Empty);
+        // Dictionary<string, object>? extras = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "extras", null);
+
+        var requestBody = new
+        {
+            text_prompts = new[]
+            {
+                new
+                {
+                    text = description,
+                    // weight = 1.0f
+                }
+            },
+            height,
+            width,
+            // cfg_scale = cfgScale,
+            // clip_guidance_preset = clipGuidancePreset,
+            // sampler,
+            // samples,
+            // seed,
+            // steps,
+            // style_preset = stylePreset
+        };
+
+        return requestBody;
     }
 
     /// <inheritdoc />
-    /// Not supported by this model.
     public string GetInvokeResponseForImage(InvokeModelResponse response)
     {
-        throw new NotImplementedException();
+        using (var memoryStream = new MemoryStream())
+        {
+            response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
+            memoryStream.Position = 0;
+            using (var reader = new StreamReader(memoryStream))
+            {
+                var responseBody = JsonSerializer.Deserialize<StableDiffusionResponse.StableDiffusionInvokeResponse>(reader.ReadToEnd());
+                if (responseBody?.Artifacts != null && responseBody.Artifacts.Count > 0)
+                {
+                    var artifact = responseBody.Artifacts[0];
+                    if (artifact.FinishReason == "SUCCESS")
+                    {
+                        return artifact.Base64;
+                    }
+                    return $"Image generation failed: {artifact.FinishReason}";
+                }
+                return "No image data received.";
+            }
+        }
     }
 }

@@ -7,6 +7,7 @@ using Connectors.Amazon.Models.Anthropic;
 using Connectors.Amazon.Models.Cohere;
 using Connectors.Amazon.Models.Meta;
 using Connectors.Amazon.Models.Mistral;
+using Connectors.Amazon.Models.Stability;
 
 namespace Connectors.Amazon.Bedrock.Core;
 
@@ -77,6 +78,12 @@ public class BedrockClientIOService
                     return new MistralIOService();
                 }
                 throw new ArgumentException($"Unsupported Mistral model: {modelId}");
+            case "stability":
+                if (modelName.StartsWith("stable-", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new StabilityIOService();
+                }
+                throw new ArgumentException($"Unsupported Stability model: {modelId}");
             default:
                 throw new ArgumentException($"Unsupported model provider: {modelProvider}");
         }

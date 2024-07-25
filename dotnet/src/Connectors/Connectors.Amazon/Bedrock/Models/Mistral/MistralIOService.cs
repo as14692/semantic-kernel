@@ -299,4 +299,23 @@ public class MistralIOService : IBedrockModelIOService
     {
         throw new NotImplementedException();
     }
+
+    /// <inheritdoc />
+    /// Not supported by this model.
+    public object GetInvokeRequestBodyForTextToImage(
+        string modelId,
+        string description,
+        int width,
+        int height,
+        PromptExecutionSettings? executionSettings = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    /// Not supported by this model.
+    public string GetInvokeResponseForImage(InvokeModelResponse response)
+    {
+        throw new NotImplementedException();
+    }
 }
