@@ -2,6 +2,9 @@
 
 using System.Threading.Tasks;
 using Connectors.Amazon.Bedrock.Services;
+using Connectors.Amazon.Extensions;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Embeddings;
 using Xunit;
 
 namespace SemanticKernel.IntegrationTests.Connectors.Amazon.Bedrock;
@@ -15,7 +18,8 @@ public class BedrockTextEmbeddingGenerationTests
     public async Task TextEmbeddingGenerationReturnsValidResponseAsync(string modelId)
     {
         // Arrange
-        var service = new BedrockTextEmbeddingGenerationService(modelId);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextEmbeddingGenerationService(modelId).Build();
+        var service = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
         var inputText = "LLM is Large Language Model.";
 
         // Act
