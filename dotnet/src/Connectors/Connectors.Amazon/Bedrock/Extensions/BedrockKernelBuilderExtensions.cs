@@ -182,6 +182,33 @@ public static class BedrockKernelBuilderExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Add Amazon Bedrock Text Embedding Generation service to the kernel builder using IAmazonBedrockRuntime object.
+    /// </summary>
+    /// <param name="builder">The kernel builder.</param>
+    /// <param name="modelId">The model for chat completion.</param>
+    /// <param name="bedrockApi">The IAmazonBedrockRuntime to run inference using the respective model.</param>
+    /// <returns></returns>
+    public static IKernelBuilder AddBedrockTextToImageService(
+        this IKernelBuilder builder,
+        string modelId,
+        IAmazonBedrockRuntime bedrockApi)
+    {
+        builder.Services.AddSingleton<ITextToImageService>(_ =>
+        {
+            try
+            {
+                return new BedrockTextToImageService(modelId, bedrockApi);
+            }
+            catch (Exception ex)
+            {
+                throw new KernelException($"An error occurred while initializing the BedrockTextToImageService: {ex.Message}", ex);
+            }
+        });
+
+        return builder;
+    }
     /// <summary>
     /// Kernel extension for text to image.
     /// </summary>
