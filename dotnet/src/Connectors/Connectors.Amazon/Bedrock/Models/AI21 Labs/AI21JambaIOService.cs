@@ -15,13 +15,13 @@ namespace Connectors.Amazon.Models.AI21;
 /// </summary>
 public class AI21JambaIOService : IBedrockModelIOService
 {
-    private readonly BedrockModelUtilities _util = new();
-
     // Define constants for default values
     private const double DefaultTemperature = 1.0;
     private const double DefaultTopP = 0.9;
     private const int DefaultMaxTokens = 4096;
     private const int DefaultN = 1;
+    private const double DefaultFrequencyPenalty = 0.0;
+    private const double DefaultPresencePenalty = 0.0;
     /// <summary>
     /// Builds InvokeModel request Body parameter with structure as required by AI21 Labs Jamba model.
     /// </summary>
@@ -31,33 +31,23 @@ public class AI21JambaIOService : IBedrockModelIOService
     /// <returns></returns>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
-        List<AI21JambaRequest.Msg> messages = new()
+        var requestBody = new
         {
-            new AI21JambaRequest.Msg
+            messages = new[]
             {
-                Role = "user",
-                Content = prompt
-            }
-        };
-
-        var temperature = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", DefaultTemperature);
-        var topP = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "top_p", DefaultTopP);
-        var maxTokens = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "max_tokens", DefaultMaxTokens);
-        var stop = this._util.GetExtensionDataValue<List<string>>(executionSettings?.ExtensionData, "stop", null);
-        var numberOfResponses = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "n", DefaultN);
-        var frequencyPenalty = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "frequency_penalty", (double?)null);
-        var presencePenalty = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "presence_penalty", (double?)null);
-
-        var requestBody = new AI21JambaRequest.AI21TextGenerationRequest
-        {
-            Messages = messages,
-            Temperature = temperature,
-            TopP = topP,
-            MaxTokens = maxTokens,
-            Stop = stop,
-            NumberOfResponses = numberOfResponses,
-            FrequencyPenalty = frequencyPenalty,
-            PresencePenalty = presencePenalty
+                new
+                {
+                    role = "user",
+                    content = prompt
+                }
+            },
+            temperature = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", DefaultTemperature),
+            top_p = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "top_p", DefaultTopP),
+            max_tokens = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "max_tokens", DefaultMaxTokens),
+            stop = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "stop", new List<string>()),
+            n = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "n", DefaultN),
+            frequency_penalty = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "frequency_penalty", DefaultFrequencyPenalty),
+            presence_penalty = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "presence_penalty", DefaultPresencePenalty)
         };
 
         return requestBody;
@@ -70,25 +60,18 @@ public class AI21JambaIOService : IBedrockModelIOService
     /// <returns></returns>
     public IReadOnlyList<TextContent> GetInvokeResponseBody(InvokeModelResponse response)
     {
-        using (var memoryStream = new MemoryStream())
+        using var memoryStream = new MemoryStream();
+        response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
+        memoryStream.Position = 0;
+        using var reader = new StreamReader(memoryStream);
+        var responseBody = JsonSerializer.Deserialize<AI21JambaResponse.AI21TextResponse>(reader.ReadToEnd());
+        var textContents = new List<TextContent>();
+        if (responseBody?.Choices is not { Count: > 0 })
         {
-            response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-            memoryStream.Position = 0;
-            using (var reader = new StreamReader(memoryStream))
-            {
-                var responseBody = JsonSerializer.Deserialize<AI21JambaResponse.AI21TextResponse>(reader.ReadToEnd());
-                var textContents = new List<TextContent>();
-
-                if (responseBody?.Choices != null && responseBody.Choices.Count > 0)
-                {
-                    foreach (var choice in responseBody.Choices)
-                    {
-                        textContents.Add(new TextContent(choice.Message?.Content));
-                    }
-                }
-                return textContents;
-            }
+            return textContents;
         }
+        textContents.AddRange(responseBody.Choices.Select(choice => new TextContent(choice.Message?.Content)));
+        return textContents;
     }
 
     /// <summary>
@@ -100,15 +83,15 @@ public class AI21JambaIOService : IBedrockModelIOService
     /// <returns></returns>
     public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
-        var messages = this._util.BuildMessageList(chatHistory);
-        var systemMessages = this._util.GetSystemMessages(chatHistory);
+        var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
+        var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
         var inferenceConfig = new InferenceConfiguration
         {
-            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
-            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
-            MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "max_tokens", DefaultMaxTokens),
-            StopSequences = this._util.GetExtensionDataValue<List<string>>(settings?.ExtensionData, "stop_sequences", []),
+            Temperature = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
+            TopP = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
+            MaxTokens = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "max_tokens", DefaultMaxTokens),
+            StopSequences = BedrockModelUtilities.GetExtensionDataValue<List<string>>(settings?.ExtensionData, "stop_sequences", []),
         };
 
         var converseRequest = new ConverseRequest
@@ -119,11 +102,11 @@ public class AI21JambaIOService : IBedrockModelIOService
             InferenceConfig = inferenceConfig,
             AdditionalModelRequestFields = new Document
             {
-                { "n", this._util.GetExtensionDataValue(settings?.ExtensionData, "n", DefaultN) },
-                { "frequency_penalty", this._util.GetExtensionDataValue(settings?.ExtensionData, "frequency_penalty", 0.0) },
-                { "presence_penalty", this._util.GetExtensionDataValue(settings?.ExtensionData, "presence_penalty", 0.0) }
+                { "n", BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "n", DefaultN) },
+                { "frequency_penalty", BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "frequency_penalty", DefaultFrequencyPenalty) },
+                { "presence_penalty", BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "presence_penalty", DefaultPresencePenalty) }
             },
-            AdditionalModelResponseFieldPaths = new List<string>()
+            AdditionalModelResponseFieldPaths = []
         };
 
         return converseRequest;
@@ -151,15 +134,15 @@ public class AI21JambaIOService : IBedrockModelIOService
     /// <returns></returns>
     public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
-        var messages = this._util.BuildMessageList(chatHistory);
-        var systemMessages = this._util.GetSystemMessages(chatHistory);
+        var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
+        var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
         var inferenceConfig = new InferenceConfiguration
         {
-            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
-            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
-            MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "max_tokens", DefaultMaxTokens),
-            StopSequences = this._util.GetExtensionDataValue<List<string>>(settings?.ExtensionData, "stop_sequences", []),
+            Temperature = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
+            TopP = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
+            MaxTokens = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "max_tokens", DefaultMaxTokens),
+            StopSequences = BedrockModelUtilities.GetExtensionDataValue<List<string>>(settings?.ExtensionData, "stop_sequences", []),
         };
 
         var converseRequest = new ConverseStreamRequest
@@ -170,11 +153,11 @@ public class AI21JambaIOService : IBedrockModelIOService
             InferenceConfig = inferenceConfig,
             AdditionalModelRequestFields = new Document
             {
-                { "n", this._util.GetExtensionDataValue(settings?.ExtensionData, "n", DefaultN) },
-                { "frequency_penalty", this._util.GetExtensionDataValue(settings?.ExtensionData, "frequency_penalty", 0.0) },
-                { "presence_penalty", this._util.GetExtensionDataValue(settings?.ExtensionData, "presence_penalty", 0.0) }
+                { "n", BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "n", DefaultN) },
+                { "frequency_penalty", BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "frequency_penalty", DefaultFrequencyPenalty) },
+                { "presence_penalty", BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "presence_penalty", DefaultPresencePenalty) }
             },
-            AdditionalModelResponseFieldPaths = new List<string>()
+            AdditionalModelResponseFieldPaths = []
         };
 
         return converseRequest;

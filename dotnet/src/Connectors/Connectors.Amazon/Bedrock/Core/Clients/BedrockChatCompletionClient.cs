@@ -1,10 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Runtime.CompilerServices;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Connectors.Amazon.Bedrock.Core;
-using Connectors.Amazon.Core.Requests;
-using Connectors.Amazon.Core.Responses;
 using Connectors.Amazon.Models;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Diagnostics;
@@ -14,11 +13,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 /// <summary>
 /// Represents a client for interacting with the chat completion through Bedrock.
 /// </summary>
-/// <typeparam name="TRequest"> Request object which is an IChatCompletionRequest. </typeparam>
-/// <typeparam name="TResponse"> Response object which is an IChatCompletionResponse. </typeparam>
-public class BedrockChatCompletionClient<TRequest, TResponse>
-    where TRequest : IChatCompletionRequest
-    where TResponse : IChatCompletionResponse
+public class BedrockChatCompletionClient
 {
     private readonly string _modelId;
     private readonly string _modelProvider;
@@ -49,12 +44,13 @@ public class BedrockChatCompletionClient<TRequest, TResponse>
         ConverseRequest converseRequest,
         CancellationToken cancellationToken = default)
     {
+        // Check that the text from the latest message in the request object is not empty.
         string? text = converseRequest.Messages?[^1]?.Content?[0]?.Text;
         if (string.IsNullOrWhiteSpace(text))
         {
             throw new ArgumentException("Did not enter proper chat completion message. Text was null or whitespace.");
         }
-        return await this._bedrockApi.ConverseAsync(converseRequest, cancellationToken).ConfigureAwait(true);
+        return await this._bedrockApi.ConverseAsync(converseRequest, cancellationToken).ConfigureAwait(false);
     }
     internal async Task<IReadOnlyList<ChatMessageContent>> GenerateChatMessageAsync(
         ChatHistory chatHistory,
@@ -136,7 +132,7 @@ public class BedrockChatCompletionClient<TRequest, TResponse>
         ChatHistory chatHistory,
         PromptExecutionSettings? executionSettings = null,
         Kernel? kernel = null,
-        CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var converseStreamRequest = this._ioService.GetConverseStreamRequest(this._modelId, chatHistory, executionSettings);
         var regionEndpoint = this._bedrockApi.DetermineServiceOperationEndpoint(converseStreamRequest).URL;
@@ -181,6 +177,6 @@ public class BedrockChatCompletionClient<TRequest, TResponse>
         CancellationToken cancellationToken = default)
     {
         var converseRequest = this._ioService.GetConverseStreamRequest(this._modelId, chatHistory, executionSettings);
-        return await this._bedrockApi.ConverseStreamAsync(converseRequest, cancellationToken).ConfigureAwait(true);
+        return await this._bedrockApi.ConverseStreamAsync(converseRequest, cancellationToken).ConfigureAwait(false);
     }
 }

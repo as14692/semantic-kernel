@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Connectors.Amazon.Bedrock.Core;
-using Connectors.Amazon.Core.Requests;
-using Connectors.Amazon.Core.Responses;
 using Connectors.Amazon.Models;
 
 namespace Microsoft.SemanticKernel.Connectors.Amazon.Bedrock.Core;
@@ -14,11 +13,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Bedrock.Core;
 /// <summary>
 /// Represents a client for interacting with the text generation through Bedrock.
 /// </summary>
-/// <typeparam name="TRequest"> Request object which is an ITextGenerationRequest. </typeparam>
-/// <typeparam name="TResponse"> Response object which is an ITextGenerationResponse. </typeparam>
-public abstract class BedrockTextGenerationClient<TRequest, TResponse>
-    where TRequest : ITextGenerationRequest
-    where TResponse : ITextGenerationResponse
+public abstract class BedrockTextGenerationClient
 {
     private readonly string _modelId;
     private readonly IAmazonBedrockRuntime _bedrockApi;
@@ -50,14 +45,15 @@ public abstract class BedrockTextGenerationClient<TRequest, TResponse>
             ContentType = "application/json",
             Body = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(requestBody))
         };
-        var response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(true);
+        var response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(false);
         return this._ioService.GetInvokeResponseBody(response);
     }
 
-    private protected async IAsyncEnumerable<StreamingTextContent> StreamTextAsync(string prompt,
+    private protected async IAsyncEnumerable<StreamingTextContent> StreamTextAsync(
+        string prompt,
         PromptExecutionSettings? executionSettings = null,
         Kernel? kernel = null,
-        CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var requestBody = this._ioService.GetInvokeModelRequestBody(this._modelId, prompt, executionSettings);
         var invokeRequest = new InvokeModelWithResponseStreamRequest
@@ -67,10 +63,10 @@ public abstract class BedrockTextGenerationClient<TRequest, TResponse>
             ContentType = "application/json",
             Body = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(requestBody))
         };
+
         InvokeModelWithResponseStreamResponse streamingResponse;
         try
         {
-            // Send the request to the Bedrock Runtime and wait for the response.
             streamingResponse = await this._bedrockApi.InvokeModelWithResponseStreamAsync(invokeRequest, cancellationToken).ConfigureAwait(false);
         }
         catch (AmazonBedrockRuntimeException e)
@@ -78,13 +74,20 @@ public abstract class BedrockTextGenerationClient<TRequest, TResponse>
             Console.WriteLine($"ERROR: Can't invoke '{this._modelId}'. Reason: {e.Message}");
             throw;
         }
+
         foreach (var item in streamingResponse.Body)
         {
-            var chunk = JsonSerializer.Deserialize<JsonNode>((item as PayloadPart).Bytes);
-            IEnumerable<string> texts = this._ioService.GetTextStreamOutput(chunk);
-            foreach (var text in texts)
+            if (item is PayloadPart payloadPart)
             {
-                yield return new StreamingTextContent(text);
+                var chunk = JsonSerializer.Deserialize<JsonNode>(payloadPart.Bytes);
+                if (chunk is not null)
+                {
+                    IEnumerable<string> texts = this._ioService.GetTextStreamOutput(chunk);
+                    foreach (var text in texts)
+                    {
+                        yield return new StreamingTextContent(text);
+                    }
+                }
             }
         }
     }
