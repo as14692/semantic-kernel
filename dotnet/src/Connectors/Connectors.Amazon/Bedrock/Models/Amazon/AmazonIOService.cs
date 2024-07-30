@@ -14,13 +14,11 @@ namespace Connectors.Amazon.Models.Amazon;
 /// </summary>
 public class AmazonIOService : IBedrockModelIOService
 {
-    private readonly BedrockModelUtilities _util = new();
-
     // Define constants for default values
     private const float DefaultTemperature = 0.7f;
     private const float DefaultTopP = 0.9f;
     private const int DefaultMaxTokenCount = 512;
-    private static readonly List<string> DefaultStopSequences = new() { "User:" };
+    private static readonly List<string> s_defaultStopSequences = new() { "User:" };
     /// <summary>
     /// Builds InvokeModel request Body parameter with structure as required by Amazon Titan.
     /// </summary>
@@ -30,10 +28,10 @@ public class AmazonIOService : IBedrockModelIOService
     /// <returns></returns>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
-        float temperature = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", DefaultTemperature);
-        float topP = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "topP", DefaultTopP);
-        int maxTokenCount = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "maxTokenCount", DefaultMaxTokenCount);
-        List<string> stopSequences = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "stopSequences", DefaultStopSequences);
+        float temperature = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", DefaultTemperature);
+        float topP = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "topP", DefaultTopP);
+        int maxTokenCount = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "maxTokenCount", DefaultMaxTokenCount);
+        List<string> stopSequences = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "stopSequences", s_defaultStopSequences);
 
         var requestBody = new
         {
@@ -55,23 +53,19 @@ public class AmazonIOService : IBedrockModelIOService
     /// <returns></returns>
     public IReadOnlyList<TextContent> GetInvokeResponseBody(InvokeModelResponse response)
     {
-        using (var memoryStream = new MemoryStream())
+        using var memoryStream = new MemoryStream();
+        response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
+        memoryStream.Position = 0;
+        using var reader = new StreamReader(memoryStream);
+        var responseBody = JsonSerializer.Deserialize<TitanTextResponse>(reader.ReadToEnd());
+        var textContents = new List<TextContent>();
+        if (responseBody?.Results is not { Count: > 0 })
         {
-            response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-            memoryStream.Position = 0;
-            using (var reader = new StreamReader(memoryStream))
-            {
-                var responseBody = JsonSerializer.Deserialize<TitanTextResponse>(reader.ReadToEnd());
-                var textContents = new List<TextContent>();
-
-                if (responseBody?.Results != null && responseBody.Results.Count > 0)
-                {
-                    string? outputText = responseBody.Results[0].OutputText;
-                    textContents.Add(new TextContent(outputText));
-                }
-                return textContents;
-            }
+            return textContents;
         }
+        string? outputText = responseBody.Results[0].OutputText;
+        textContents.Add(new TextContent(outputText));
+        return textContents;
     }
     /// <summary>
     /// Builds the ConverseRequest object for the Bedrock ConverseAsync call with request parameters required by Amazon Titan.
@@ -82,14 +76,14 @@ public class AmazonIOService : IBedrockModelIOService
     /// <returns></returns>
     public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
-        var messages = this._util.BuildMessageList(chatHistory);
-        var systemMessages = this._util.GetSystemMessages(chatHistory);
+        var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
+        var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
         var inferenceConfig = new InferenceConfiguration
         {
-            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", DefaultTemperature),
-            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "topP", DefaultTopP),
-            MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "maxTokenCount", DefaultMaxTokenCount),
+            Temperature = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "temperature", DefaultTemperature),
+            TopP = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "topP", DefaultTopP),
+            MaxTokens = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "maxTokenCount", DefaultMaxTokenCount),
         };
 
         var converseRequest = new ConverseRequest
@@ -126,14 +120,14 @@ public class AmazonIOService : IBedrockModelIOService
     /// <returns></returns>
     public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
-        var messages = this._util.BuildMessageList(chatHistory);
-        var systemMessages = this._util.GetSystemMessages(chatHistory);
+        var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
+        var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
         var inferenceConfig = new InferenceConfiguration
         {
-            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", DefaultTemperature),
-            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "topP", DefaultTopP),
-            MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "maxTokenCount", DefaultMaxTokenCount),
+            Temperature = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "temperature", DefaultTemperature),
+            TopP = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "topP", DefaultTopP),
+            MaxTokens = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "maxTokenCount", DefaultMaxTokenCount),
         };
 
         var converseStreamRequest = new ConverseStreamRequest
@@ -143,7 +137,7 @@ public class AmazonIOService : IBedrockModelIOService
             System = systemMessages,
             InferenceConfig = inferenceConfig,
             AdditionalModelRequestFields = new Document(),
-            AdditionalModelResponseFieldPaths = new List<string>()
+            AdditionalModelResponseFieldPaths = []
         };
 
         return converseStreamRequest;

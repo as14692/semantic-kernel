@@ -8,7 +8,7 @@
     <PropertyGroup>
       <NoWarn>$(NoWarn);SKEXP0001,SKEXP0010</NoWarn>
     </PropertyGroup>
-
+  
     <ItemGroup>
       <PackageReference Include="AWSSDK.BedrockRuntime" />
       <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" />

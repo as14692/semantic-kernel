@@ -14,13 +14,11 @@ namespace Connectors.Amazon.Models.Anthropic;
 /// </summary>
 public class AnthropicIOService : IBedrockModelIOService
 {
-    private readonly BedrockModelUtilities _util = new();
-
     // Define constants for default values
     private const double DefaultTemperature = 1.0;
     private const double DefaultTopP = 1.0;
     private const int DefaultMaxTokensToSample = 4096;
-    private static readonly List<string> DefaultStopSequences = new() { "\n\nHuman:" };
+    private static readonly List<string> s_defaultStopSequences = new() { "\n\nHuman:" };
     private const int DefaultTopK = 250;
     /// <summary>
     /// Builds InvokeModel request Body parameter with structure as required by Anthropic Claude.
@@ -31,22 +29,15 @@ public class AnthropicIOService : IBedrockModelIOService
     /// <returns></returns>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
-        var temperature = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", (double?)DefaultTemperature);
-        var topP = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "top_p", (double?)DefaultTopP);
-        var maxTokensToSample = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "max_tokens_to_sample", (int?)DefaultMaxTokensToSample);
-        var stopSequences = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "stop_sequences", DefaultStopSequences);
-        var topK = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "top_k", (int?)DefaultTopK);
-
-        var requestBody = new ClaudeRequest.ClaudeTextGenerationRequest()
+        var requestBody = new
         {
-            Prompt = $"\n\nHuman: {prompt}\n\nAssistant:",
-            MaxTokensToSample = maxTokensToSample,
-            StopSequences = stopSequences,
-            Temperature = temperature,
-            TopP = topP,
-            TopK = topK
+            prompt = $"\n\nHuman: {prompt}\n\nAssistant:",
+            temperature = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "temperature", (double?)DefaultTemperature),
+            max_tokens_to_sample = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "max_tokens_to_sample", (int?)DefaultMaxTokensToSample),
+            stop_sequences = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "stop_sequences", s_defaultStopSequences),
+            top_p = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "top_p", (double?)DefaultTopP),
+            top_k = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "top_k", (int?)DefaultTopK)
         };
-
         return requestBody;
     }
     /// <summary>
@@ -56,23 +47,17 @@ public class AnthropicIOService : IBedrockModelIOService
     /// <returns></returns>
     public IReadOnlyList<TextContent> GetInvokeResponseBody(InvokeModelResponse response)
     {
-        using (var memoryStream = new MemoryStream())
+        using var memoryStream = new MemoryStream();
+        response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
+        memoryStream.Position = 0;
+        using var reader = new StreamReader(memoryStream);
+        var responseBody = JsonSerializer.Deserialize<ClaudeResponse>(reader.ReadToEnd());
+        var textContents = new List<TextContent>();
+        if (!string.IsNullOrEmpty(responseBody?.Completion))
         {
-            response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-            memoryStream.Position = 0;
-            using (var reader = new StreamReader(memoryStream))
-            {
-                var responseBody = JsonSerializer.Deserialize<ClaudeResponse>(reader.ReadToEnd());
-                var textContents = new List<TextContent>();
-
-                if (!string.IsNullOrEmpty(responseBody?.Completion))
-                {
-                    textContents.Add(new TextContent(responseBody.Completion));
-                }
-
-                return textContents;
-            }
+            textContents.Add(new TextContent(responseBody.Completion));
         }
+        return textContents;
     }
 
     /// <summary>
@@ -84,32 +69,29 @@ public class AnthropicIOService : IBedrockModelIOService
     /// <returns></returns>
     public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
-        var messages = this._util.BuildMessageList(chatHistory);
-        var systemMessages = this._util.GetSystemMessages(chatHistory);
-
-        var system = this._util.GetExtensionDataValue(settings?.ExtensionData, "system", systemMessages);
-
+        var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
+        var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
+        var system = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "system", systemMessages);
         var inferenceConfig = new InferenceConfiguration
         {
-            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
-            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
-            MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "max_tokens_to_sample", DefaultMaxTokensToSample)
+            Temperature = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
+            TopP = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
+            MaxTokens = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "max_tokens_to_sample", DefaultMaxTokensToSample)
         };
+        var additionalModelRequestFields = new Document();
 
-        var additionalModelRequestFields = new Document { };
-
-        var tools = this._util.GetExtensionDataValue<List<ClaudeRequest.ClaudeChatCompletionRequest.ClaudeTool>>(settings?.ExtensionData, "tools", null);
-        var toolChoice = this._util.GetExtensionDataValue<ClaudeRequest.ClaudeChatCompletionRequest.ClaudeToolChoice>(settings?.ExtensionData, "tool_choice", null);
+        var tools = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "tools", new List<ClaudeToolUse.ClaudeTool>());
+        var toolChoice = BedrockModelUtilities.GetExtensionDataValue<ClaudeToolUse.ClaudeToolChoice?>(settings?.ExtensionData, "tool_choice", null);
 
         if (modelId != "anthropic.claude-instant-v1")
         {
             additionalModelRequestFields.Add(
-                "tools", new Document(tools?.Select(t => new Document
+                "tools", new Document(tools.Select(t => new Document
                 {
                     { "name", t.Name },
                     { "description", t.Description },
                     { "input_schema", t.InputSchema }
-                }).ToList() ?? new List<Document>())
+                }).ToList())
             );
 
             additionalModelRequestFields.Add(
@@ -160,32 +142,32 @@ public class AnthropicIOService : IBedrockModelIOService
     /// <returns></returns>
     public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
-        var messages = this._util.BuildMessageList(chatHistory);
-        var systemMessages = this._util.GetSystemMessages(chatHistory);
+        var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
+        var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var system = this._util.GetExtensionDataValue(settings?.ExtensionData, "system", systemMessages);
+        var system = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "system", systemMessages);
 
         var inferenceConfig = new InferenceConfiguration
         {
-            Temperature = this._util.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
-            TopP = this._util.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
-            MaxTokens = this._util.GetExtensionDataValue(settings?.ExtensionData, "max_tokens_to_sample", DefaultMaxTokensToSample)
+            Temperature = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "temperature", (float)DefaultTemperature),
+            TopP = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "top_p", (float)DefaultTopP),
+            MaxTokens = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "max_tokens_to_sample", DefaultMaxTokensToSample)
         };
 
-        var additionalModelRequestFields = new Document { };
+        var additionalModelRequestFields = new Document();
 
-        var tools = this._util.GetExtensionDataValue<List<ClaudeRequest.ClaudeChatCompletionRequest.ClaudeTool>>(settings?.ExtensionData, "tools", null);
-        var toolChoice = this._util.GetExtensionDataValue<ClaudeRequest.ClaudeChatCompletionRequest.ClaudeToolChoice>(settings?.ExtensionData, "tool_choice", null);
+        var tools = BedrockModelUtilities.GetExtensionDataValue(settings?.ExtensionData, "tools", new List<ClaudeToolUse.ClaudeTool>());
+        var toolChoice = BedrockModelUtilities.GetExtensionDataValue<ClaudeToolUse.ClaudeToolChoice?>(settings?.ExtensionData, "tool_choice", null);
 
         if (modelId != "anthropic.claude-instant-v1")
         {
             additionalModelRequestFields.Add(
-                "tools", new Document(tools?.Select(t => new Document
+                "tools", new Document(tools.Select(t => new Document
                 {
                     { "name", t.Name },
                     { "description", t.Description },
                     { "input_schema", t.InputSchema }
-                }).ToList() ?? new List<Document>())
+                }).ToList())
             );
 
             additionalModelRequestFields.Add(
