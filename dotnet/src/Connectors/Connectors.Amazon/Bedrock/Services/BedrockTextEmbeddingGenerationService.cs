@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using Amazon.BedrockRuntime;
-using Connectors.Amazon.Core.Requests;
-using Connectors.Amazon.Core.Responses;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.Amazon.Core;
 using Microsoft.SemanticKernel.Embeddings;
@@ -13,9 +11,10 @@ namespace Connectors.Amazon.Bedrock.Services;
 /// <summary>
 /// Bedrock Text Embedding Generation Service.
 /// </summary>
-public class BedrockTextEmbeddingGenerationService : BedrockTextEmbeddingClient<ITextEmbeddingRequest, ITextEmbeddingResponse>, ITextEmbeddingGenerationService
+public class BedrockTextEmbeddingGenerationService : ITextEmbeddingGenerationService
 {
     private readonly Dictionary<string, object?> _attributesInternal = [];
+    private readonly BedrockTextEmbeddingClient _textEmbeddingClient;
 
     /// <inheritdoc />
     public IReadOnlyDictionary<string, object?> Attributes => this._attributesInternal;
@@ -26,8 +25,8 @@ public class BedrockTextEmbeddingGenerationService : BedrockTextEmbeddingClient<
     /// <param name="modelId"></param>
     /// <param name="bedrockApi"></param>
     public BedrockTextEmbeddingGenerationService(string modelId, IAmazonBedrockRuntime bedrockApi)
-        : base(modelId, bedrockApi)
     {
+        this._textEmbeddingClient = new BedrockTextEmbeddingClient(modelId, bedrockApi);
         this._attributesInternal.Add(AIServiceExtensions.ModelIdKey, modelId);
     }
 
@@ -37,6 +36,6 @@ public class BedrockTextEmbeddingGenerationService : BedrockTextEmbeddingClient<
         Kernel? kernel = null,
         CancellationToken cancellationToken = default)
     {
-        return this.GetEmbeddingsAsync(data, kernel, cancellationToken);
+        return this._textEmbeddingClient.GetEmbeddingsAsync(data, kernel, cancellationToken);
     }
 }

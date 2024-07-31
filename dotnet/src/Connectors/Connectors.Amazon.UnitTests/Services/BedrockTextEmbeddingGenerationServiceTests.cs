@@ -2,8 +2,10 @@
 
 using System.Text;
 using System.Text.Json;
+using Amazon;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
+using Amazon.Runtime.Endpoints;
 using Connectors.Amazon.Bedrock.Services;
 using Connectors.Amazon.Models.Amazon;
 using Microsoft.SemanticKernel.Services;
@@ -41,11 +43,16 @@ public class BedrockTextEmbeddingGenerationServiceTests
         // Arrange
         string modelId = "amazon.titan-embed-text-v2:0";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var embeddingResponse = new TitanTextEmbeddingResponse
+        var embeddingResponse = new TitanEmbeddingResponse
         {
             Embedding = new List<float> { 0.1f, -0.2f, 0.3f, -0.4f },
             InputTextTokenCount = 10
         };
+        mockBedrockApi.Setup(m => m.DetermineServiceOperationEndpoint(It.IsAny<InvokeModelRequest>()))
+            .Returns(new Endpoint("https://bedrock-runtime.us-east-1.amazonaws.com")
+            {
+                URL = "https://bedrock-runtime.us-east-1.amazonaws.com"
+            });
         mockBedrockApi.Setup(m => m.InvokeModelAsync(It.IsAny<InvokeModelRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new InvokeModelResponse
             {

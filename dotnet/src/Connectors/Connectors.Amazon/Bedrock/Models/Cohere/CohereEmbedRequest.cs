@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.Json.Serialization;
-using Connectors.Amazon.Core.Requests;
 
 namespace Connectors.Amazon.Models.Cohere;
 
 /// <summary>
 /// Text Embedding Generation request body for Cohere.
 /// </summary>
-public class CohereEmbedRequest : ITextEmbeddingRequest
+public class CohereEmbedRequest
 {
     /// <summary>
     /// An array of strings for the model to embed. For optimal performance, we recommend reducing the length of each text to less than 512 tokens. 1 token is about 4 characters.
