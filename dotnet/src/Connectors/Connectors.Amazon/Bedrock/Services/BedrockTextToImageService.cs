@@ -2,6 +2,7 @@
 
 using Amazon.BedrockRuntime;
 using Connectors.Amazon.Bedrock.Core.Clients;
+using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Services;
 using Microsoft.SemanticKernel.TextToImage;
@@ -24,9 +25,11 @@ public class BedrockTextToImageService : ITextToImageService
     /// </summary>
     /// <param name="modelId"></param>
     /// <param name="bedrockApi"></param>
-    public BedrockTextToImageService(string modelId, IAmazonBedrockRuntime bedrockApi)
+    /// <param name="loggerFactory"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    public BedrockTextToImageService(string modelId, IAmazonBedrockRuntime bedrockApi, ILoggerFactory? loggerFactory = null)
     {
-        this._textToImageClient = new BedrockTextToImageClient(modelId, bedrockApi);
+        this._textToImageClient = new BedrockTextToImageClient(modelId, bedrockApi, loggerFactory);
         this._attributesInternal.Add(AIServiceExtensions.ModelIdKey, modelId);
     }
     /// <inheritdoc />

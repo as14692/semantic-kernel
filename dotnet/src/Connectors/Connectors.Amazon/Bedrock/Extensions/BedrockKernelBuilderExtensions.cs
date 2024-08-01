@@ -145,7 +145,7 @@ public static class BedrockKernelBuilderExtensions
         string modelId,
         IAmazonBedrockRuntime bedrockApi)
     {
-        builder.Services.AddSingleton<ITextEmbeddingGenerationService>(_ =>
+        builder.Services.AddSingleton<ITextEmbeddingGenerationService>(services =>
         {
             try
             {
@@ -202,11 +202,12 @@ public static class BedrockKernelBuilderExtensions
         string modelId,
         IAmazonBedrockRuntime bedrockApi)
     {
-        builder.Services.AddSingleton<ITextToImageService>(_ =>
+        builder.Services.AddSingleton<ITextToImageService>(services =>
         {
             try
             {
-                return new BedrockTextToImageService(modelId, bedrockApi);
+                var logger = services.GetService<ILoggerFactory>();
+                return new BedrockTextToImageService(modelId, bedrockApi, logger);
             }
             catch (Exception ex)
             {
@@ -233,8 +234,9 @@ public static class BedrockKernelBuilderExtensions
         {
             try
             {
+                var logger = services.GetService<ILoggerFactory>();
                 var bedrockRuntime = services.GetRequiredService<IAmazonBedrockRuntime>();
-                return new BedrockTextToImageService(modelId, bedrockRuntime);
+                return new BedrockTextToImageService(modelId, bedrockRuntime, logger);
             }
             catch (Exception ex)
             {

@@ -7,7 +7,7 @@ namespace Connectors.Amazon.Models.Stability;
 /// <summary>
 /// Represents the response from the Stable Diffusion service.
 /// </summary>
-public class StableDiffusionResponse
+public static class StableDiffusionResponse
 {
     /// <summary>
     /// Response for invoke.
@@ -18,12 +18,12 @@ public class StableDiffusionResponse
         /// The result of the operation. If successful, the response is success.
         /// </summary>
         [JsonPropertyName("result")]
-        public string Result { get; set; }
+        public string? Result { get; set; }
         /// <summary>
         /// An array of images, one for each requested image.
         /// </summary>
         [JsonPropertyName("artifacts")]
-        public List<Artifact> Artifacts { get; set; }
+        public List<Artifact>? Artifacts { get; set; }
         /// <summary>
         /// An array of images, one for each requested image.
         /// </summary>
@@ -38,7 +38,7 @@ public class StableDiffusionResponse
             /// The base64 encoded image that the model generated.
             /// </summary>
             [JsonPropertyName("base64")]
-            public string Base64 { get; set; }
+            public string? Base64 { get; set; }
             /// <summary>
             /// The result of the image generation process. Valid values are:
             /// SUCCESS – The image generation process succeeded.
@@ -46,7 +46,7 @@ public class StableDiffusionResponse
             /// CONTENT_FILTERED – The content filter filtered the image and the image might be blurred.
             /// </summary>
             [JsonPropertyName("finishReason")]
-            public string FinishReason { get; set; }
+            public string? FinishReason { get; set; }
         }
     }
 }

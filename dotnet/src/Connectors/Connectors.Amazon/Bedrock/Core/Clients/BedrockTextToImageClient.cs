@@ -4,6 +4,8 @@ using System.Text.Json;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Connectors.Amazon.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.SemanticKernel;
 
 namespace Connectors.Amazon.Bedrock.Core.Clients;
@@ -16,12 +18,14 @@ internal sealed class BedrockTextToImageClient
     private readonly string _modelId;
     private readonly IAmazonBedrockRuntime _bedrockApi;
     private readonly IBedrockModelIOService _ioService;
+    private readonly ILogger _logger;
 
-    public BedrockTextToImageClient(string modelId, IAmazonBedrockRuntime bedrockApi)
+    public BedrockTextToImageClient(string modelId, IAmazonBedrockRuntime bedrockApi, ILoggerFactory? loggerFactory = null)
     {
         this._modelId = modelId;
         this._bedrockApi = bedrockApi;
         this._ioService = new BedrockClientIOService().GetIOService(modelId);
+        this._logger = loggerFactory?.CreateLogger(this.GetType()) ?? NullLogger.Instance;
     }
 
     internal async Task<string> GetImageAsync(
@@ -39,7 +43,16 @@ internal sealed class BedrockTextToImageClient
             ContentType = "application/json",
             Body = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(requestBody))
         };
-        var response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(true);
+        InvokeModelResponse? response;
+        try
+        {
+            response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            this._logger.LogError(ex, "Error while invoking model {ModelId}", this._modelId);
+            throw;
+        }
         return this._ioService.GetInvokeResponseForImage(response);
     }
 }
