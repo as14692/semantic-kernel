@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using Amazon.BedrockRuntime;
+using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.Amazon.Core;
 using Microsoft.SemanticKernel.Embeddings;
@@ -24,9 +25,10 @@ public class BedrockTextEmbeddingGenerationService : ITextEmbeddingGenerationSer
     /// </summary>
     /// <param name="modelId"></param>
     /// <param name="bedrockApi"></param>
-    public BedrockTextEmbeddingGenerationService(string modelId, IAmazonBedrockRuntime bedrockApi)
+    /// <param name="loggerFactory"></param>
+    public BedrockTextEmbeddingGenerationService(string modelId, IAmazonBedrockRuntime bedrockApi, ILoggerFactory? loggerFactory = null)
     {
-        this._textEmbeddingClient = new BedrockTextEmbeddingClient(modelId, bedrockApi);
+        this._textEmbeddingClient = new BedrockTextEmbeddingClient(modelId, bedrockApi, loggerFactory);
         this._attributesInternal.Add(AIServiceExtensions.ModelIdKey, modelId);
     }
 
