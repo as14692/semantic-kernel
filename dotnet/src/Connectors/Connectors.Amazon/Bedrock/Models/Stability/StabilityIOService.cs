@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-using System.Collections.Specialized;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
@@ -143,7 +142,12 @@ public class StabilityIOService : IBedrockModelIOService
         {
             return "No image data received.";
         }
-        var artifact = responseBody.Artifacts[0];
-        return artifact.FinishReason == "SUCCESS" ? artifact.Base64 : $"Image generation failed: {artifact.FinishReason}";
+        StableDiffusionResponse.StableDiffusionInvokeResponse.Artifact artifact = responseBody.Artifacts[0];
+        // Check for null before using FinishReason and Base64
+        if (artifact.FinishReason is null || artifact.Base64 is null)
+        {
+            return "Image generation failed: Invalid response.";
+        }
+        return artifact.FinishReason != "ERROR" ? artifact.Base64 : $"Image generation failed: {artifact.FinishReason}";
     }
 }
