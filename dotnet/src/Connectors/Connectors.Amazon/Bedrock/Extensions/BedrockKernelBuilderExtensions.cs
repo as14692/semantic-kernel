@@ -178,7 +178,8 @@ public static class BedrockKernelBuilderExtensions
             try
             {
                 var bedrockRuntime = services.GetRequiredService<IAmazonBedrockRuntime>();
-                return new BedrockTextEmbeddingGenerationService(modelId, bedrockRuntime);
+                var logger = services.GetService<ILoggerFactory>();
+                return new BedrockTextEmbeddingGenerationService(modelId, bedrockRuntime, logger);
             }
             catch (Exception ex)
             {
