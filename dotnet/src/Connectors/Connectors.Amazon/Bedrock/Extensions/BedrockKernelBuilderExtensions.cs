@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using Amazon.BedrockRuntime;
-using Amazon.Extensions.NETCore.Setup;
-using Amazon.Runtime;
 using Connectors.Amazon.Bedrock.Services;
 using Connectors.Amazon.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -179,7 +177,8 @@ public static class BedrockKernelBuilderExtensions
             try
             {
                 var bedrockRuntime = services.GetRequiredService<IAmazonBedrockRuntime>();
-                return new BedrockTextEmbeddingGenerationService(modelId, bedrockRuntime);
+                var logger = services.GetService<ILoggerFactory>();
+                return new BedrockTextEmbeddingGenerationService(modelId, bedrockRuntime, logger);
             }
             catch (Exception ex)
             {
