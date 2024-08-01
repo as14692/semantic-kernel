@@ -150,7 +150,8 @@ public static class BedrockKernelBuilderExtensions
         {
             try
             {
-                return new BedrockTextEmbeddingGenerationService(modelId, bedrockApi);
+                var logger = services.GetService<ILoggerFactory>();
+                return new BedrockTextEmbeddingGenerationService(modelId, bedrockApi, logger);
             }
             catch (Exception ex)
             {

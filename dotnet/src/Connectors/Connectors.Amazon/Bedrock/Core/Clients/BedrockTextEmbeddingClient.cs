@@ -5,6 +5,8 @@ using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Connectors.Amazon.Bedrock.Core;
 using Connectors.Amazon.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 
@@ -16,18 +18,21 @@ internal sealed class BedrockTextEmbeddingClient
     private readonly string _modelId;
     private readonly IAmazonBedrockRuntime _bedrockApi;
     private readonly IBedrockModelIOService _ioService;
+    private readonly ILogger _logger;
     /// <summary>
     /// Builds the client object and registers the model input-output service given the user's passed in model ID.
     /// </summary>
     /// <param name="modelId"></param>
     /// <param name="bedrockApi"></param>
+    /// <param name="loggerFactory"></param>
     /// <exception cref="ArgumentException"></exception>
-    public BedrockTextEmbeddingClient(string modelId, IAmazonBedrockRuntime bedrockApi)
+    public BedrockTextEmbeddingClient(string modelId, IAmazonBedrockRuntime bedrockApi, ILoggerFactory? loggerFactory = null)
     {
         this._modelId = modelId;
         this._bedrockApi = bedrockApi;
         var clientService = new BedrockClientIOService();
         this._ioService = clientService.GetIOService(modelId);
+        this._logger = loggerFactory?.CreateLogger(this.GetType()) ?? NullLogger.Instance;
     }
 
     /// <summary>
@@ -55,7 +60,16 @@ internal sealed class BedrockTextEmbeddingClient
                 ContentType = "application/json",
                 Body = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(requestBody))
             };
-            InvokeModelResponse? response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(false);
+            InvokeModelResponse? response;
+            try
+            {
+                response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "Can't invoke '{ModelId}'. Reason: {Error}", this._modelId, ex.Message);
+                throw;
+            }
             var output = this._ioService.GetEmbeddingResponseBody(response);
             finalList.Add(output);
         }
