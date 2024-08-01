@@ -6,7 +6,10 @@ using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime.Endpoints;
 using Connectors.Amazon.Bedrock.Services;
+using Connectors.Amazon.Extensions;
 using Connectors.Amazon.Models.Amazon;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.Services;
 using Moq;
 using Xunit;
@@ -27,7 +30,8 @@ public class BedrockTextEmbeddingGenerationServiceTests
         // Arrange & Act
         string modelId = "cohere.embed-english-v3";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var service = new BedrockTextEmbeddingGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextEmbeddingGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
 
         // Assert
         Assert.Equal(modelId, service.Attributes[AIServiceExtensions.ModelIdKey]);
@@ -58,7 +62,8 @@ public class BedrockTextEmbeddingGenerationServiceTests
                 Body = new MemoryStream(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(embeddingResponse))),
                 ContentType = "application/json"
             });
-        var service = new BedrockTextEmbeddingGenerationService(modelId, mockBedrockApi.Object);
+        var kernel = Kernel.CreateBuilder().AddBedrockTextEmbeddingGenerationService(modelId, mockBedrockApi.Object).Build();
+        var service = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
         var inputText = "This is a sample text.";
 
         // Act
