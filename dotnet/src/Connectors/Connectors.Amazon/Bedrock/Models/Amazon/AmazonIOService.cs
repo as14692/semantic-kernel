@@ -152,16 +152,16 @@ public class AmazonIOService : IBedrockModelIOService
     {
         if (modelId.Contains("v1"))
         {
-            return new TitanRequest.TitanTextEmbeddingRequest()
+            return new
             {
-                InputText = data
+                inputText = data
             };
         }
-        return new TitanRequest.TitanTextEmbeddingRequest()
+        return new
         {
-            InputText = data,
-            Dimensions = 512,
-            Normalize = true
+            inputText = data,
+            dimensions = 512,
+            normalize = true
         };
     }
     /// <summary>
@@ -178,7 +178,7 @@ public class AmazonIOService : IBedrockModelIOService
             memoryStream.Position = 0;
             using (var reader = new StreamReader(memoryStream))
             {
-                var responseBody = JsonSerializer.Deserialize<TitanTextEmbeddingResponse>(reader.ReadToEnd());
+                var responseBody = JsonSerializer.Deserialize<TitanEmbeddingResponse>(reader.ReadToEnd());
                 var embedding = new ReadOnlyMemory<float>(responseBody?.Embedding?.ToArray());
                 return embedding;
             }

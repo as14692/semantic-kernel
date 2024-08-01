@@ -3,8 +3,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
-using Connectors.Amazon.Core.Requests;
-using Connectors.Amazon.Core.Responses;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
@@ -24,7 +22,7 @@ public class CohereEmbedIOService : IBedrockModelIOService
     /// <returns></returns>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("This model is just for text embedding.");
     }
     /// <summary>
     /// This class is just for embedding.
@@ -33,7 +31,7 @@ public class CohereEmbedIOService : IBedrockModelIOService
     /// <returns></returns>
     public IReadOnlyList<TextContent> GetInvokeResponseBody(InvokeModelResponse response)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("This model is just for text embedding.");
     }
 
     /// <summary>
@@ -43,7 +41,7 @@ public class CohereEmbedIOService : IBedrockModelIOService
     /// <returns></returns>
     public IEnumerable<string> GetTextStreamOutput(JsonNode chunk)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("This model is just for text embedding.");
     }
 
     /// <summary>
@@ -56,7 +54,7 @@ public class CohereEmbedIOService : IBedrockModelIOService
     /// <exception cref="NotImplementedException"></exception>
     public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("This model is just for text embedding.");
     }
     /// <summary>
     /// This class is just for embedding.
@@ -68,7 +66,7 @@ public class CohereEmbedIOService : IBedrockModelIOService
     /// <exception cref="NotImplementedException"></exception>
     public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("This model is just for text embedding.");
     }
 
     /// <summary>
@@ -80,12 +78,13 @@ public class CohereEmbedIOService : IBedrockModelIOService
     /// <returns></returns>
     public object GetEmbeddingRequestBody(string data, string modelId)
     {
-        return new CohereEmbedRequest()
+        // Until Semantic Kernel provides execution settings parameter to pass into GenerateEmbeddingsAsync, these parameter cannot be altered from default.
+        return new
         {
-            Texts = [data],
-            InputType = "search_document", //until Semantic Kernel provides parameter to pass into GenerateEmbeddingsAsync, this parameter cannot be altered.
-            Truncate = "NONE",
-            EmbeddingTypes = []
+            texts = new List<string> { data },
+            input_type = "search_document",
+            truncate = "END",
+            embedding_types = new List<string>()
         };
     }
 
@@ -97,21 +96,17 @@ public class CohereEmbedIOService : IBedrockModelIOService
     /// <exception cref="NotImplementedException"></exception>
     public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
     {
-        using (var memoryStream = new MemoryStream())
+        using var memoryStream = new MemoryStream();
+        response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
+        memoryStream.Position = 0;
+        using var reader = new StreamReader(memoryStream);
+        var responseBody = JsonSerializer.Deserialize<CohereEmbedResponse>(reader.ReadToEnd());
+        if (responseBody?.Embeddings is not { Count: > 0 })
         {
-            response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-            memoryStream.Position = 0;
-            using (var reader = new StreamReader(memoryStream))
-            {
-                var responseBody = JsonSerializer.Deserialize<CohereEmbedResponse>(reader.ReadToEnd());
-                if (responseBody?.Embeddings != null && responseBody.Embeddings.Count > 0)
-                {
-                    var firstEmbedding = responseBody.Embeddings[0];
-                    return new ReadOnlyMemory<float>(firstEmbedding.ToArray());
-                }
-                return new ReadOnlyMemory<float>();
-            }
+            return new ReadOnlyMemory<float>();
         }
+        var firstEmbedding = responseBody.Embeddings[0];
+        return new ReadOnlyMemory<float>(firstEmbedding.ToArray());
     }
 
     /// <inheritdoc />

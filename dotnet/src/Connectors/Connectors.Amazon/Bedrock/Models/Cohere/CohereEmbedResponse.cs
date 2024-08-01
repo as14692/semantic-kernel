@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.Json.Serialization;
-using Connectors.Amazon.Core.Responses;
 
 namespace Connectors.Amazon.Models.Cohere;
 
 /// <summary>
 /// Text Embedding Generation response body for Cohere embed models.
 /// </summary>
-public class CohereEmbedResponse : ITextEmbeddingResponse
+public class CohereEmbedResponse
 {
     /// <summary>
     /// An array of embeddings, where each embedding is an array of floats with 1024 elements. The length of the embeddings array will be the same as the length of the original texts array.

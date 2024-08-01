@@ -2,6 +2,7 @@
 
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace Connectors.Amazon.Models;
@@ -17,7 +18,7 @@ public static class BedrockModelUtilities
     /// <param name="role"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static ConversationRole MapRole(AuthorRole role)
+    public static ConversationRole MapAuthorRoleToConversationRole(AuthorRole role)
     {
         if (role == AuthorRole.User)
         {
@@ -49,11 +50,18 @@ public static class BedrockModelUtilities
     /// <returns></returns>
     public static List<Message> BuildMessageList(ChatHistory chatHistory)
     {
+        // Check that the text from the latest message in the chat history  is not empty.
+        Verify.NotNullOrEmpty(chatHistory);
+        string? text = chatHistory[^1].Content;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new ArgumentException("Last message in chat history was null or whitespace.");
+        }
         return chatHistory
             .Where(m => m.Role != AuthorRole.System)
             .Select(m => new Message
             {
-                Role = MapRole(m.Role),
+                Role = MapAuthorRoleToConversationRole(m.Role),
                 Content = new List<ContentBlock> { new() { Text = m.Content } }
             })
             .ToList();

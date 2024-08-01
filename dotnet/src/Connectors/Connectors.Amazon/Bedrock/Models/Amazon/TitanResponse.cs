@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.Json.Serialization;
-using Microsoft.SemanticKernel;
 
 namespace Connectors.Amazon.Models.Amazon;
 
@@ -42,4 +41,23 @@ public class TitanTextResponse
         [JsonPropertyName("completionReason")]
         public string? CompletionReason { get; set; }
     }
+}
+
+/// <summary>
+/// The Amazon Titan Embedding response object when deserialized from Invoke Model call.
+/// </summary>
+[Serializable]
+public class TitanEmbeddingResponse
+{
+    /// <summary>
+    /// The list of floats representing the embedding vector.
+    /// </summary>
+    [JsonPropertyName("embedding")]
+    public List<float>? Embedding { get; set; }
+
+    /// <summary>
+    /// The number of tokens in the input text.
+    /// </summary>
+    [JsonPropertyName("inputTextTokenCount")]
+    public int InputTextTokenCount { get; set; }
 }

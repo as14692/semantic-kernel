@@ -4,8 +4,6 @@ using System.Text.Json;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Connectors.Amazon.Bedrock.Core;
-using Connectors.Amazon.Core.Requests;
-using Connectors.Amazon.Core.Responses;
 using Connectors.Amazon.Models;
 
 namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
@@ -13,11 +11,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 /// <summary>
 /// Represents a client for interacting with text embedding through Bedrock.
 /// </summary>
-/// <typeparam name="TRequest"></typeparam>
-/// <typeparam name="TResponse"></typeparam>
-public class BedrockTextEmbeddingClient<TRequest, TResponse>
-    where TRequest : ITextEmbeddingRequest
-    where TResponse : ITextEmbeddingResponse
+internal sealed class BedrockTextEmbeddingClient
 {
     private readonly string _modelId;
     private readonly IAmazonBedrockRuntime _bedrockApi;
@@ -28,11 +22,12 @@ public class BedrockTextEmbeddingClient<TRequest, TResponse>
     /// <param name="modelId"></param>
     /// <param name="bedrockApi"></param>
     /// <exception cref="ArgumentException"></exception>
-    protected BedrockTextEmbeddingClient(string modelId, IAmazonBedrockRuntime bedrockApi)
+    public BedrockTextEmbeddingClient(string modelId, IAmazonBedrockRuntime bedrockApi)
     {
         this._modelId = modelId;
         this._bedrockApi = bedrockApi;
-        this._ioService = new BedrockClientIOService().GetIOService(modelId);
+        var clientService = new BedrockClientIOService();
+        this._ioService = clientService.GetIOService(modelId);
     }
 
     /// <summary>
@@ -43,11 +38,12 @@ public class BedrockTextEmbeddingClient<TRequest, TResponse>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public async Task<IList<ReadOnlyMemory<float>>> GetEmbeddingsAsync(
+    internal async Task<IList<ReadOnlyMemory<float>>> GetEmbeddingsAsync(
         IList<string> data,
         Kernel? kernel = null,
         CancellationToken cancellationToken = default)
     {
+        Verify.NotNullOrEmpty(data);
         var finalList = new List<ReadOnlyMemory<float>>();
         foreach (var stringInput in data)
         {
@@ -59,7 +55,7 @@ public class BedrockTextEmbeddingClient<TRequest, TResponse>
                 ContentType = "application/json",
                 Body = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(requestBody))
             };
-            var response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(true);
+            InvokeModelResponse? response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(false);
             var output = this._ioService.GetEmbeddingResponseBody(response);
             finalList.Add(output);
         }
