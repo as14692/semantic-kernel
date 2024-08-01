@@ -3,29 +3,28 @@
 using System.Text.Json;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
-using Connectors.Amazon.Core.Requests;
-using Connectors.Amazon.Core.Responses;
 using Connectors.Amazon.Models;
 using Microsoft.SemanticKernel;
 
 namespace Connectors.Amazon.Bedrock.Core.Clients;
 
-public class BedrockTextToImageClient<TRequest, TResponse>
-    where TRequest : ITextToImageRequest
-    where TResponse : ITextToImageResponse
+/// <summary>
+/// Client for Text to image service.
+/// </summary>
+internal sealed class BedrockTextToImageClient
 {
     private readonly string _modelId;
     private readonly IAmazonBedrockRuntime _bedrockApi;
     private readonly IBedrockModelIOService _ioService;
 
-    protected BedrockTextToImageClient(string modelId, IAmazonBedrockRuntime bedrockApi)
+    public BedrockTextToImageClient(string modelId, IAmazonBedrockRuntime bedrockApi)
     {
         this._modelId = modelId;
         this._bedrockApi = bedrockApi;
         this._ioService = new BedrockClientIOService().GetIOService(modelId);
     }
 
-    public async Task<string> GetImageAsync(
+    internal async Task<string> GetImageAsync(
         string description,
         int width,
         int height,

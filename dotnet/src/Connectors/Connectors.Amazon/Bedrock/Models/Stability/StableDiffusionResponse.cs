@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-using System.Buffers.Text;
 using System.Text.Json.Serialization;
-using Connectors.Amazon.Core.Responses;
 
 namespace Connectors.Amazon.Models.Stability;
 
@@ -14,7 +12,7 @@ public class StableDiffusionResponse
     /// <summary>
     /// Response for invoke.
     /// </summary>
-    public class StableDiffusionInvokeResponse : ITextToImageResponse
+    public class StableDiffusionInvokeResponse
     {
         /// <summary>
         /// The result of the operation. If successful, the response is success.

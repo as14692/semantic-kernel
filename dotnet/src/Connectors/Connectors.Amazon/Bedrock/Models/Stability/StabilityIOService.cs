@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Collections.Specialized;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
@@ -13,12 +14,14 @@ namespace Connectors.Amazon.Models.Stability;
 /// </summary>
 public class StabilityIOService : IBedrockModelIOService
 {
-    private readonly BedrockModelUtilities _util = new();
     // Default values
-    private const int DefaultCfgScale = 7;
+    private const float DefaultCfgScale = 7f;
     private const int DefaultSamples = 1;
     private const int DefaultSeed = 0;
     private const int DefaultSteps = 30;
+    private const string DefaultClipGuidancePreset = "NONE";
+    private const string DefaultStylePreset = "3d-model";
+    private const float DefaultWeight = 1.0f;
     /// <summary>
     /// Builds InvokeModelRequest Body parameter to be serialized.
     /// </summary>
@@ -105,31 +108,24 @@ public class StabilityIOService : IBedrockModelIOService
         int height,
         PromptExecutionSettings? executionSettings = null)
     {
-        float cfgScale = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "cfgScale", DefaultCfgScale);
-        string clipGuidancePreset = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "clipGuidancePreset", string.Empty);
-        string sampler = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "sampler", string.Empty);
-        int samples = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "samples", DefaultSamples);
-        int seed = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "seed", DefaultSeed);
-        int steps = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "steps", DefaultSteps);
-        string stylePreset = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "stylePreset", string.Empty);
-        // Dictionary<string, object>? extras = this._util.GetExtensionDataValue(executionSettings?.ExtensionData, "extras", null);
-
-        var requestBody = new StableDiffusionRequest.StableDiffusionInvokeRequest()
+        var requestBody = new
         {
-            TextPrompts = new List<StableDiffusionRequest.StableDiffusionInvokeRequest.TextPrompt>
+            text_prompts = new List<object>()
             {
-                new StableDiffusionRequest.StableDiffusionInvokeRequest.TextPrompt { Text = description }
+                new
+                {
+                    text = description,
+                    weight = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "weight", DefaultWeight)
+                }
             },
-            Height = height,
-            Width = width,
-            // CfgScale = cfgScale,
-            // ClipGuidancePreset = clipGuidancePreset,
-            // Sampler = sampler,
-            Samples = samples,
-            Seed = seed,
-            Steps = steps,
-            // StylePreset = stylePreset
-            // Extras = extras
+            height,
+            width,
+            cfg_scale = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "cfg_scale", DefaultCfgScale),
+            clip_guidance_preset = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "clip_guidance_preset", DefaultClipGuidancePreset),
+            samples = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "samples", DefaultSamples),
+            seed = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "seed", DefaultSeed),
+            steps = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "steps", DefaultSteps),
+            style_preset = BedrockModelUtilities.GetExtensionDataValue(executionSettings?.ExtensionData, "style_preset", DefaultStylePreset)
         };
 
         return requestBody;
@@ -138,24 +134,16 @@ public class StabilityIOService : IBedrockModelIOService
     /// <inheritdoc />
     public string GetInvokeResponseForImage(InvokeModelResponse response)
     {
-        using (var memoryStream = new MemoryStream())
+        using var memoryStream = new MemoryStream();
+        response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
+        memoryStream.Position = 0;
+        using var reader = new StreamReader(memoryStream);
+        var responseBody = JsonSerializer.Deserialize<StableDiffusionResponse.StableDiffusionInvokeResponse>(reader.ReadToEnd());
+        if (responseBody?.Artifacts is not { Count: > 0 })
         {
-            response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-            memoryStream.Position = 0;
-            using (var reader = new StreamReader(memoryStream))
-            {
-                var responseBody = JsonSerializer.Deserialize<StableDiffusionResponse.StableDiffusionInvokeResponse>(reader.ReadToEnd());
-                if (responseBody?.Artifacts != null && responseBody.Artifacts.Count > 0)
-                {
-                    var artifact = responseBody.Artifacts[0];
-                    if (artifact.FinishReason == "SUCCESS")
-                    {
-                        return artifact.Base64;
-                    }
-                    return $"Image generation failed: {artifact.FinishReason}";
-                }
-                return "No image data received.";
-            }
+            return "No image data received.";
         }
+        var artifact = responseBody.Artifacts[0];
+        return artifact.FinishReason == "SUCCESS" ? artifact.Base64 : $"Image generation failed: {artifact.FinishReason}";
     }
 }
