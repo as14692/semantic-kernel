@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System.Threading.Tasks;
-using Connectors.Amazon.Bedrock.Services;
 using Connectors.Amazon.Extensions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Embeddings;
