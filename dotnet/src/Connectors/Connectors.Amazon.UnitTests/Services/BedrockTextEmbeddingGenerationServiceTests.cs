@@ -2,7 +2,6 @@
 
 using System.Text;
 using System.Text.Json;
-using Amazon;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime.Endpoints;

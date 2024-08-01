@@ -1,12 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-using System.Diagnostics;
 using System.Text.Json;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Connectors.Amazon.Bedrock.Core;
 using Connectors.Amazon.Models;
-using Microsoft.SemanticKernel.Diagnostics;
 
 namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 
@@ -16,11 +14,8 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 internal sealed class BedrockTextEmbeddingClient
 {
     private readonly string _modelId;
-    private readonly string _modelProvider;
     private readonly IAmazonBedrockRuntime _bedrockApi;
     private readonly IBedrockModelIOService _ioService;
-    private readonly BedrockClientUtilities _clientUtilities;
-    private Uri? _textEmbeddingEndpoint;
     /// <summary>
     /// Builds the client object and registers the model input-output service given the user's passed in model ID.
     /// </summary>
@@ -33,8 +28,6 @@ internal sealed class BedrockTextEmbeddingClient
         this._bedrockApi = bedrockApi;
         var clientService = new BedrockClientIOService();
         this._ioService = clientService.GetIOService(modelId);
-        this._modelProvider = clientService.GetModelProvider(modelId);
-        this._clientUtilities = new BedrockClientUtilities();
     }
 
     /// <summary>
@@ -62,40 +55,7 @@ internal sealed class BedrockTextEmbeddingClient
                 ContentType = "application/json",
                 Body = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(requestBody))
             };
-            var regionEndpoint = this._bedrockApi.DetermineServiceOperationEndpoint(invokeRequest).URL;
-            this._textEmbeddingEndpoint = new Uri(regionEndpoint);
-            InvokeModelResponse? response = null;
-            using var activity = ModelDiagnostics.StartCompletionActivity(
-               endpoint: this._textEmbeddingEndpoint, modelName: this._modelId, modelProvider: this._modelProvider, prompt: stringInput,  executionSettings: new PromptExecutionSettings());
-            ActivityStatusCode activityStatus;
-            try
-            {
-                response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(false);
-                if (activity is not null)
-                {
-                    activityStatus = this._clientUtilities.ConvertHttpStatusCodeToActivityStatusCode(response.HttpStatusCode);
-                    activity.SetStatus(activityStatus);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"ERROR: Can't invoke '{this._modelId}'. Reason: {ex.Message}");
-                if (activity is not null)
-                {
-                    activity.SetError(ex);
-                    if (response != null)
-                    {
-                        activityStatus = this._clientUtilities.ConvertHttpStatusCodeToActivityStatusCode(response.HttpStatusCode);
-                        activity.SetStatus(activityStatus);
-                    }
-                    else
-                    {
-                        // If response is null, set a default status or leave it unset
-                        activity.SetStatus(ActivityStatusCode.Error); // or ActivityStatusCode.Unset
-                    }
-                }
-                throw;
-            }
+            InvokeModelResponse? response = await this._bedrockApi.InvokeModelAsync(invokeRequest, cancellationToken).ConfigureAwait(false);
             var output = this._ioService.GetEmbeddingResponseBody(response);
             finalList.Add(output);
         }
