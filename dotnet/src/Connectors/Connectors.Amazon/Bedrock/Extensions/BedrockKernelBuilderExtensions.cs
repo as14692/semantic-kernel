@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Reflection;
 using Amazon.BedrockRuntime;
+using Amazon.Runtime;
 using Connectors.Amazon.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,6 +18,18 @@ namespace Connectors.Amazon.Extensions;
 /// </summary>
 public static class BedrockKernelBuilderExtensions
 {
+    private const string UserAgentHeader = "User-Agent";
+    private static readonly string s_userAgentString = $"lib/semantic-kernel#{Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty}";
+
+    private static void AWSServiceClient_BeforeServiceRequest(object sender, RequestEventArgs e)
+    {
+        if (e is not WebServiceRequestEventArgs args || !args.Headers.TryGetValue(UserAgentHeader, out string? value) || value.Contains(s_userAgentString))
+        {
+            return;
+        }
+
+        args.Headers[UserAgentHeader] = value + " " + s_userAgentString;
+    }
     /// <summary>
     /// Add Amazon Bedrock Chat Completion service to the kernel builder using IAmazonBedrockRuntime object.
     /// </summary>
@@ -33,6 +47,7 @@ public static class BedrockKernelBuilderExtensions
             try
             {
                 var logger = services.GetService<ILoggerFactory>();
+                ((AmazonServiceClient)bedrockApi).BeforeRequestEvent += AWSServiceClient_BeforeServiceRequest;
                 return new BedrockChatCompletionService(modelId, bedrockApi, logger);
             }
             catch (Exception ex)
