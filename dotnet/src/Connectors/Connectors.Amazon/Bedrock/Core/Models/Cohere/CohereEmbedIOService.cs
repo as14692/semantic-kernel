@@ -3,10 +3,9 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
-using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace Connectors.Amazon.Models.Cohere;
+namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 
 /// <summary>
 /// Embedding input-output service for Cohere. Cohere-embed is not a Command or Command R model so is differentiated as a service.
