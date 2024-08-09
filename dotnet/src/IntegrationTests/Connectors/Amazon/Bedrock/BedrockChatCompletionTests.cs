@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System.Threading.Tasks;
-using Connectors.Amazon.Extensions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Xunit;
 
-namespace SemanticKernel.IntegrationTests.Connectors.Amazon.Bedrock;
+namespace SemanticKernel.IntegrationTests.Connectors.Amazon;
 
 public class BedrockChatCompletionTests
 {
