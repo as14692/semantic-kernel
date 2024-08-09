@@ -107,53 +107,40 @@ public static class BedrockKernelBuilderExtensions
     /// Add Amazon Bedrock Text Embedding Generation service to the kernel builder using IAmazonBedrockRuntime object.
     /// </summary>
     /// <param name="builder">The kernel builder.</param>
-    /// <param name="modelId">The model for chat completion.</param>
-    /// <param name="bedrockApi">The IAmazonBedrockRuntime to run inference using the respective model.</param>
+    /// <param name="modelId">The model for text embedding generation.</param>
+    /// <param name="bedrockRuntime">The IAmazonBedrockRuntime to run inference using the respective model.</param>
+    /// <param name="serviceId">The optional service ID.</param>
     /// <returns></returns>
     public static IKernelBuilder AddBedrockTextEmbeddingGenerationService(
         this IKernelBuilder builder,
         string modelId,
-        IAmazonBedrockRuntime bedrockApi)
+        IAmazonBedrockRuntime? bedrockRuntime = null,
+        string? serviceId = null)
     {
-        builder.Services.AddSingleton<ITextEmbeddingGenerationService>(services =>
+        if (bedrockRuntime == null)
+        {
+            // Add IAmazonBedrockRuntime service client to the DI container
+            builder.Services.TryAddAWSService<IAmazonBedrockRuntime>();
+        }
+
+        builder.Services.AddKeyedSingleton<ITextEmbeddingGenerationService>(serviceId, (serviceProvider, _) =>
         {
             try
             {
-                var logger = services.GetService<ILoggerFactory>();
-                return new BedrockTextEmbeddingGenerationService(modelId, bedrockApi, logger);
+                IAmazonBedrockRuntime runtime = bedrockRuntime ?? serviceProvider.GetRequiredService<IAmazonBedrockRuntime>();
+                var logger = serviceProvider.GetService<ILoggerFactory>();
+                // Check if the runtime instance is a proxy object
+                if (runtime.GetType().BaseType == typeof(AmazonServiceClient))
+                {
+                    // Cast to AmazonServiceClient and subscribe to the event
+                    ((AmazonServiceClient)runtime).BeforeRequestEvent += AWSServiceClient_BeforeServiceRequest;
+                }
+
+                return new BedrockTextEmbeddingGenerationService(modelId, runtime, logger);
             }
             catch (Exception ex)
             {
-                throw new KernelException($"An error occurred while initializing the BedrockTextEmbeddingGenerationService: {ex.Message}", ex);
-            }
-        });
-
-        return builder;
-    }
-
-    /// <summary>
-    /// Add Amazon Bedrock Text Embedding Generation service to the kernel builder using new AmazonBedrockRuntimeClient().
-    /// </summary>
-    /// <param name="builder">The kernel builder.</param>
-    /// <param name="modelId">The model for chat completion.</param>
-    /// <returns></returns>
-    public static IKernelBuilder AddBedrockTextEmbeddingGenerationService(
-        this IKernelBuilder builder,
-        string modelId)
-    {
-        // Add IAmazonBedrockRuntime service client to the DI container
-        builder.Services.AddAWSService<IAmazonBedrockRuntime>();
-        builder.Services.AddSingleton<ITextEmbeddingGenerationService>(services =>
-        {
-            try
-            {
-                var bedrockRuntime = services.GetRequiredService<IAmazonBedrockRuntime>();
-                var logger = services.GetService<ILoggerFactory>();
-                return new BedrockTextEmbeddingGenerationService(modelId, bedrockRuntime, logger);
-            }
-            catch (Exception ex)
-            {
-                throw new KernelException($"An error occurred while initializing the BedrockTextEmbeddingGenerationService: {ex.Message}", ex);
+                throw new KernelException($"An error occurred while initializing the {nameof(BedrockTextEmbeddingGenerationService)}: {ex.Message}", ex);
             }
         });
 
