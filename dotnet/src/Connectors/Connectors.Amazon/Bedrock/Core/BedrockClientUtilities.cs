@@ -4,19 +4,19 @@ using System.Diagnostics;
 using System.Net;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace Connectors.Amazon.Bedrock.Core;
+namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 
 /// <summary>
 /// Utility functions for the Bedrock clients.
 /// </summary>
-public class BedrockClientUtilities
+internal sealed class BedrockClientUtilities
 {
     /// <summary>
     /// Convert the Http Status Code in Converse Response to the Activity Status Code for Semantic Kernel activity.
     /// </summary>
     /// <param name="httpStatusCode"></param>
     /// <returns></returns>
-    public ActivityStatusCode ConvertHttpStatusCodeToActivityStatusCode(HttpStatusCode httpStatusCode)
+    internal ActivityStatusCode ConvertHttpStatusCodeToActivityStatusCode(HttpStatusCode httpStatusCode)
     {
         if ((int)httpStatusCode >= 200 && (int)httpStatusCode < 300)
         {
@@ -40,13 +40,13 @@ public class BedrockClientUtilities
     /// <param name="role"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public AuthorRole MapConversationRoleToAuthorRole(string role)
+    internal AuthorRole MapConversationRoleToAuthorRole(string role)
     {
-        return role switch
+        return role.ToUpperInvariant() switch
         {
-            "user" => AuthorRole.User,
-            "assistant" => AuthorRole.Assistant,
-            "system" => AuthorRole.System,
+            "USER" => AuthorRole.User,
+            "ASSISTANT" => AuthorRole.Assistant,
+            "SYSTEM" => AuthorRole.System,
             _ => throw new ArgumentOutOfRangeException(nameof(role), $"Invalid role: {role}")
         };
     }

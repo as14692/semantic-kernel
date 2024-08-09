@@ -3,10 +3,10 @@
 using System.Text.Json;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
-using Connectors.Amazon.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.Amazon.Core;
 
 namespace Connectors.Amazon.Bedrock.Core.Clients;
 
