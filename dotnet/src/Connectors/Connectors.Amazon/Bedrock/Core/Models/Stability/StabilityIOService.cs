@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.Amazon.Core;
 
 namespace Connectors.Amazon.Models.Stability;
@@ -12,86 +10,8 @@ namespace Connectors.Amazon.Models.Stability;
 /// <summary>
 /// StabilityIOService class for handling StabilityIO requests and responses.
 /// </summary>
-public class StabilityIOService : IBedrockModelIOService
+public class StabilityIOService : IBedrockTextToImageIOService
 {
-    /// <summary>
-    /// Builds InvokeModelRequest Body parameter to be serialized.
-    /// </summary>
-    /// <param name="modelId">The model ID to be used as a request parameter.</param>
-    /// <param name="prompt">The input prompt for text generation.</param>
-    /// <param name="executionSettings">Optional prompt execution settings.</param>
-    /// <returns></returns>
-    public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
-    {
-        throw new NotImplementedException();
-    }
-    /// <summary>
-    /// Extracts the test contents from the InvokeModelResponse as returned by the Bedrock API.
-    /// </summary>
-    /// <param name="response">The InvokeModelResponse object provided by the Bedrock InvokeModelAsync output.</param>
-    /// <returns></returns>
-    public IReadOnlyList<TextContent> GetInvokeResponseBody(InvokeModelResponse response)
-    {
-        throw new NotImplementedException();
-    }
-    /// <summary>
-    /// Jurassic does not support converse.
-    /// </summary>
-    /// <param name="modelId">The model ID.</param>
-    /// <param name="chatHistory">The messages between assistant and user.</param>
-    /// <param name="settings">Optional prompt execution settings.</param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
-    {
-        throw new NotImplementedException();
-    }
-    /// <summary>
-    /// Jurassic does not support streaming.
-    /// </summary>
-    /// <param name="chunk"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public IEnumerable<string> GetTextStreamOutput(JsonNode chunk)
-    {
-        throw new NotImplementedException();
-    }
-    /// <summary>
-    /// Jurassic does not support converse (or streaming for that matter).
-    /// </summary>
-    /// <param name="modelId"></param>
-    /// <param name="chatHistory"></param>
-    /// <param name="settings"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// Builds the InvokeModelRequest body for text embedding generation requests.
-    /// This model does not support text embedding generation currently.
-    /// </summary>
-    /// <param name="data">The data to be passed into the request.</param>
-    /// <param name="modelId">The model for the request.</param>
-    /// <returns></returns>
-    public object GetEmbeddingRequestBody(string data, string modelId)
-    {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// Extracts the embedding floats from the invoke model Bedrock runtime action response.
-    /// This model does not support text embedding generation currently.
-    /// </summary>
-    /// <param name="response"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
-    {
-        throw new NotImplementedException();
-    }
     /// <inheritdoc />
     public object GetInvokeRequestBodyForTextToImage(
         string modelId,

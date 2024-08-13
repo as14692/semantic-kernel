@@ -17,14 +17,14 @@ internal sealed class BedrockTextToImageClient
 {
     private readonly string _modelId;
     private readonly IAmazonBedrockRuntime _bedrockApi;
-    private readonly IBedrockModelIOService _ioService;
+    private readonly IBedrockTextToImageIOService _ioService;
     private readonly ILogger _logger;
 
     public BedrockTextToImageClient(string modelId, IAmazonBedrockRuntime bedrockApi, ILoggerFactory? loggerFactory = null)
     {
         this._modelId = modelId;
         this._bedrockApi = bedrockApi;
-        this._ioService = new BedrockClientIOService().GetIOService(modelId);
+        this._ioService = new BedrockClientIOService().GetTextToImageIOService(modelId);
         this._logger = loggerFactory?.CreateLogger(this.GetType()) ?? NullLogger.Instance;
     }
 

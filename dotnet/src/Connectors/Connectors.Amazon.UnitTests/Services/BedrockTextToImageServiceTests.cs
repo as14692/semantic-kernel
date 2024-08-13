@@ -6,7 +6,6 @@ using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime.Endpoints;
 using Connectors.Amazon.Bedrock.Services;
-using Connectors.Amazon.Extensions;
 using Connectors.Amazon.Models.Stability;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Services;
