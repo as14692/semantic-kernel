@@ -181,16 +181,15 @@ internal sealed class AmazonIOService : IBedrockTextGenerationIOService, IBedroc
     /// <exception cref="NotImplementedException"></exception>
     public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
     {
-        using (var memoryStream = new MemoryStream())
+        using (var reader = new StreamReader(response.Body))
         {
-            response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-            memoryStream.Position = 0;
-            using (var reader = new StreamReader(memoryStream))
+            var responseBody = JsonSerializer.Deserialize<TitanEmbeddingResponse>(reader.ReadToEnd());
+            if (responseBody?.Embedding is { Count: > 0 } embedding)
             {
-                var responseBody = JsonSerializer.Deserialize<TitanEmbeddingResponse>(reader.ReadToEnd());
-                var embedding = new ReadOnlyMemory<float>(responseBody?.Embedding?.ToArray());
-                return embedding;
+                return new ReadOnlyMemory<float>(embedding.ToArray());
             }
+
+            return ReadOnlyMemory<float>.Empty;
         }
     }
 }

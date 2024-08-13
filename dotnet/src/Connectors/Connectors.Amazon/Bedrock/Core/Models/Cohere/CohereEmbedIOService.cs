@@ -37,16 +37,16 @@ public class CohereEmbedIOService : IBedrockTextEmbeddingIOService
     /// <exception cref="NotImplementedException"></exception>
     public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
     {
-        using var memoryStream = new MemoryStream();
-        response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-        memoryStream.Position = 0;
-        using var reader = new StreamReader(memoryStream);
-        var responseBody = JsonSerializer.Deserialize<CohereEmbedResponse>(reader.ReadToEnd());
-        if (responseBody?.Embeddings is not { Count: > 0 })
+        using (var reader = new StreamReader(response.Body))
         {
-            return new ReadOnlyMemory<float>();
+            var responseBody = JsonSerializer.Deserialize<CohereEmbedResponse>(reader.ReadToEnd());
+            if (responseBody?.Embeddings is { Count: > 0 } embeddings)
+            {
+                var firstEmbedding = embeddings[0];
+                return new ReadOnlyMemory<float>(firstEmbedding.ToArray());
+            }
+
+            return ReadOnlyMemory<float>.Empty;
         }
-        var firstEmbedding = responseBody.Embeddings[0];
-        return new ReadOnlyMemory<float>(firstEmbedding.ToArray());
     }
 }
