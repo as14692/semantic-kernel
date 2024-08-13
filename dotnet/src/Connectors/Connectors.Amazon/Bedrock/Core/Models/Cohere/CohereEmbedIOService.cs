@@ -1,73 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
-using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 
 /// <summary>
 /// Embedding input-output service for Cohere. Cohere-embed is not a Command or Command R model so is differentiated as a service.
 /// </summary>
-public class CohereEmbedIOService : IBedrockModelIOService
+public class CohereEmbedIOService : IBedrockTextEmbeddingIOService
 {
-    /// <summary>
-    /// This class is just for embedding.
-    /// </summary>
-    /// <param name="modelId">The model.</param>
-    /// <param name="prompt">The input prompt for text generation.</param>
-    /// <param name="executionSettings">Optional prompt execution settings.</param>
-    /// <returns></returns>
-    public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings = null)
-    {
-        throw new NotImplementedException("This model is just for text embedding.");
-    }
-    /// <summary>
-    /// This class is just for embedding.
-    /// </summary>
-    /// <param name="response">The InvokeModelResponse object provided by the Bedrock InvokeModelAsync output.</param>
-    /// <returns></returns>
-    public IReadOnlyList<TextContent> GetInvokeResponseBody(InvokeModelResponse response)
-    {
-        throw new NotImplementedException("This model is just for text embedding.");
-    }
-
-    /// <summary>
-    /// This class is just for embedding.
-    /// </summary>
-    /// <param name="chunk"></param>
-    /// <returns></returns>
-    public IEnumerable<string> GetTextStreamOutput(JsonNode chunk)
-    {
-        throw new NotImplementedException("This model is just for text embedding.");
-    }
-
-    /// <summary>
-    /// This class is just for embedding.
-    /// </summary>
-    /// <param name="modelId"></param>
-    /// <param name="chatHistory"></param>
-    /// <param name="settings"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
-    {
-        throw new NotImplementedException("This model is just for text embedding.");
-    }
-    /// <summary>
-    /// This class is just for embedding.
-    /// </summary>
-    /// <param name="modelId"></param>
-    /// <param name="chatHistory"></param>
-    /// <param name="settings"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null)
-    {
-        throw new NotImplementedException("This model is just for text embedding.");
-    }
-
     /// <summary>
     /// Builds the InvokeModelRequest body for text embedding generation requests.
     /// This model does not support text embedding generation currently.

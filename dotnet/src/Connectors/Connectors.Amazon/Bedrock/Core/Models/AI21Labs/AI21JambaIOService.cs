@@ -12,7 +12,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 /// <summary>
 /// Input-output service for AI21 Labs Jamba model.
 /// </summary>
-internal sealed class AI21JambaIOService : IBedrockModelIOService
+internal sealed class AI21JambaIOService : IBedrockTextGenerationIOService, IBedrockChatCompletionIOService
 {
     /// <summary>
     /// Builds InvokeModel request Body parameter with structure as required by AI21 Labs Jamba model.
@@ -21,12 +21,12 @@ internal sealed class AI21JambaIOService : IBedrockModelIOService
     /// <param name="prompt">The input prompt for text generation.</param>
     /// <param name="executionSettings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    object IBedrockModelIOService.GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
+    object IBedrockTextGenerationIOService.GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
         var exec = AmazonJambaExecutionSettings.FromExecutionSettings(executionSettings);
-        List<AI21JambaRequest.AI21TextGenerationRequest.Msg> messages = new()
+        List<AI21JambaRequest.AI21TextGenerationRequest.JambaMessage> messages = new()
         {
-            new AI21JambaRequest.AI21TextGenerationRequest.Msg()
+            new AI21JambaRequest.AI21TextGenerationRequest.JambaMessage()
             {
                 Role = "user",
                 Content = prompt
@@ -54,14 +54,11 @@ internal sealed class AI21JambaIOService : IBedrockModelIOService
     /// </summary>
     /// <param name="response">The InvokeModelResponse object provided by the Bedrock InvokeModelAsync output.</param>
     /// <returns></returns>
-    IReadOnlyList<TextContent> IBedrockModelIOService.GetInvokeResponseBody(InvokeModelResponse response)
+    IReadOnlyList<TextContent> IBedrockTextGenerationIOService.GetInvokeResponseBody(InvokeModelResponse response)
     {
-        using var memoryStream = new MemoryStream();
-        response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-        memoryStream.Position = 0;
-        using var reader = new StreamReader(memoryStream);
+        using var reader = new StreamReader(response.Body);
         var responseBody = JsonSerializer.Deserialize<AI21JambaResponse.AI21TextResponse>(reader.ReadToEnd());
-        var textContents = new List<TextContent>();
+        List<TextContent> textContents = [];
         if (responseBody?.Choices is not { Count: > 0 })
         {
             return textContents;
@@ -77,7 +74,7 @@ internal sealed class AI21JambaIOService : IBedrockModelIOService
     /// <param name="chatHistory">The messages between assistant and user.</param>
     /// <param name="settings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    ConverseRequest IBedrockModelIOService.GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
+    ConverseRequest IBedrockChatCompletionIOService.GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
     {
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
@@ -129,7 +126,7 @@ internal sealed class AI21JambaIOService : IBedrockModelIOService
     /// </summary>
     /// <param name="chunk"></param>
     /// <returns></returns>
-    IEnumerable<string> IBedrockModelIOService.GetTextStreamOutput(JsonNode chunk)
+    IEnumerable<string> IBedrockTextGenerationIOService.GetTextStreamOutput(JsonNode chunk)
     {
         var buffer = new StringBuilder();
         if (chunk["choices"]?[0]?["delta"]?["content"] != null)
@@ -146,7 +143,7 @@ internal sealed class AI21JambaIOService : IBedrockModelIOService
     /// <param name="chatHistory"></param>
     /// <param name="settings"></param>
     /// <returns></returns>
-    ConverseStreamRequest IBedrockModelIOService.GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
+    ConverseStreamRequest IBedrockChatCompletionIOService.GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
     {
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
@@ -191,29 +188,5 @@ internal sealed class AI21JambaIOService : IBedrockModelIOService
         };
 
         return converseRequest;
-    }
-
-    /// <summary>
-    /// Builds the InvokeModelRequest body for text embedding generation requests.
-    /// This model does not support text embedding generation currently.
-    /// </summary>
-    /// <param name="data">The data to be passed into the request.</param>
-    /// <param name="modelId">The model for the request.</param>
-    /// <returns></returns>
-    public object GetEmbeddingRequestBody(string data, string modelId)
-    {
-        throw new NotImplementedException("Embedding not supported by this model.");
-    }
-
-    /// <summary>
-    /// Extracts the embedding floats from the invoke model Bedrock runtime action response.
-    /// This model does not support text embedding generation currently.
-    /// </summary>
-    /// <param name="response"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
-    {
-        throw new NotImplementedException("Embedding not supported by this model.");
     }
 }

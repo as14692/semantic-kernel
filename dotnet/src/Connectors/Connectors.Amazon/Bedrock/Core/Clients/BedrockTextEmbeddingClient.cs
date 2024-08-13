@@ -15,7 +15,7 @@ internal sealed class BedrockTextEmbeddingClient
 {
     private readonly string _modelId;
     private readonly IAmazonBedrockRuntime _bedrockApi;
-    private readonly IBedrockModelIOService _ioService;
+    private readonly IBedrockTextEmbeddingIOService _ioEmbeddingService;
     private readonly ILogger _logger;
     /// <summary>
     /// Builds the client object and registers the model input-output service given the user's passed in model ID.
@@ -29,7 +29,7 @@ internal sealed class BedrockTextEmbeddingClient
         this._modelId = modelId;
         this._bedrockApi = bedrockApi;
         var clientService = new BedrockClientIOService();
-        this._ioService = clientService.GetIOService(modelId);
+        this._ioEmbeddingService = clientService.GetEmbedIOService(modelId);
         this._logger = loggerFactory?.CreateLogger(this.GetType()) ?? NullLogger.Instance;
     }
 
@@ -50,7 +50,7 @@ internal sealed class BedrockTextEmbeddingClient
         var finalList = new List<ReadOnlyMemory<float>>();
         foreach (var stringInput in data)
         {
-            var requestBody = this._ioService.GetEmbeddingRequestBody(stringInput, this._modelId);
+            var requestBody = this._ioEmbeddingService.GetEmbeddingRequestBody(stringInput, this._modelId);
             var invokeRequest = new InvokeModelRequest
             {
                 ModelId = this._modelId,
@@ -68,7 +68,7 @@ internal sealed class BedrockTextEmbeddingClient
                 this._logger.LogError(ex, "Can't invoke '{ModelId}'. Reason: {Error}", this._modelId, ex.Message);
                 throw;
             }
-            var output = this._ioService.GetEmbeddingResponseBody(response);
+            var output = this._ioEmbeddingService.GetEmbeddingResponseBody(response);
             finalList.Add(output);
         }
         return finalList;

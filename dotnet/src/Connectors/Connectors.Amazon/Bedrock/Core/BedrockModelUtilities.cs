@@ -28,6 +28,7 @@ internal static class BedrockModelUtilities
         {
             return ConversationRole.Assistant;
         }
+
         throw new ArgumentException($"Invalid role: {role}");
     }
     /// <summary>

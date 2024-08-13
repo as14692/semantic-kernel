@@ -12,7 +12,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 /// Input-output service for Cohere Command R.
 /// </summary>
 // ReSharper disable InconsistentNaming
-internal sealed class CohereCommandRIOService : IBedrockModelIOService
+internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService, IBedrockChatCompletionIOService
 // ReSharper restore InconsistentNaming
 {
     /// <summary>
@@ -22,7 +22,7 @@ internal sealed class CohereCommandRIOService : IBedrockModelIOService
     /// <param name="prompt">The input prompt for text generation.</param>
     /// <param name="executionSettings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    object IBedrockModelIOService.GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
+    object IBedrockTextGenerationIOService.GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
         var exec = AmazonCommandRExecutionSettings.FromExecutionSettings(executionSettings);
         var chatHistory = BedrockModelUtilities.GetExtensionDataValue<List<CommandRTools.ChatMessage>>(executionSettings?.ExtensionData, "chat_history") ?? exec.ChatHistory;
@@ -65,18 +65,16 @@ internal sealed class CohereCommandRIOService : IBedrockModelIOService
     /// </summary>
     /// <param name="response">The InvokeModelResponse object provided by the Bedrock InvokeModelAsync output.</param>
     /// <returns></returns>
-    IReadOnlyList<TextContent> IBedrockModelIOService.GetInvokeResponseBody(InvokeModelResponse response)
+    IReadOnlyList<TextContent> IBedrockTextGenerationIOService.GetInvokeResponseBody(InvokeModelResponse response)
     {
-        using var memoryStream = new MemoryStream();
-        response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-        memoryStream.Position = 0;
-        using var reader = new StreamReader(memoryStream);
+        using var reader = new StreamReader(response.Body);
         var responseBody = JsonSerializer.Deserialize<CommandRResponse>(reader.ReadToEnd());
-        var textContents = new List<TextContent>();
+        List<TextContent> textContents = [];
         if (!string.IsNullOrEmpty(responseBody?.Text))
         {
             textContents.Add(new TextContent(responseBody.Text));
         }
+
         return textContents;
     }
 
@@ -87,7 +85,7 @@ internal sealed class CohereCommandRIOService : IBedrockModelIOService
     /// <param name="chatHistory">The messages between assistant and user.</param>
     /// <param name="settings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    ConverseRequest IBedrockModelIOService.GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
+    ConverseRequest IBedrockChatCompletionIOService.GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
     {
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
@@ -160,7 +158,7 @@ internal sealed class CohereCommandRIOService : IBedrockModelIOService
     /// </summary>
     /// <param name="chunk"></param>
     /// <returns></returns>
-    IEnumerable<string> IBedrockModelIOService.GetTextStreamOutput(JsonNode chunk)
+    IEnumerable<string> IBedrockTextGenerationIOService.GetTextStreamOutput(JsonNode chunk)
     {
         var text = chunk["text"]?.ToString();
         if (!string.IsNullOrEmpty(text))
@@ -176,7 +174,7 @@ internal sealed class CohereCommandRIOService : IBedrockModelIOService
     /// <param name="chatHistory">The messages between assistant and user.</param>
     /// <param name="settings">Optional prompt execution settings.</param>
     /// <returns></returns>
-    ConverseStreamRequest IBedrockModelIOService.GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
+    ConverseStreamRequest IBedrockChatCompletionIOService.GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
     {
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
@@ -242,29 +240,5 @@ internal sealed class CohereCommandRIOService : IBedrockModelIOService
         };
 
         return converseRequest;
-    }
-
-    /// <summary>
-    /// Builds the InvokeModelRequest body for text embedding generation requests.
-    /// This model does not support text embedding generation currently.
-    /// </summary>
-    /// <param name="data">The data to be passed into the request.</param>
-    /// <param name="modelId">The model for the request.</param>
-    /// <returns></returns>
-    public object GetEmbeddingRequestBody(string data, string modelId)
-    {
-        throw new NotImplementedException("Embedding not supported by this model.");
-    }
-
-    /// <summary>
-    /// Extracts the embedding floats from the invoke model Bedrock runtime action response.
-    /// This model does not support text embedding generation currently. Cohere has a separate embed model.
-    /// </summary>
-    /// <param name="response"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
-    {
-        throw new NotImplementedException("Embedding not supported by this model.");
     }
 }
