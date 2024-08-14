@@ -11,7 +11,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon;
 /// Prompt execution settings for Cohere Command Text Generation
 /// </summary>
 [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-public class AmazonCommandExecutionSettings : PromptExecutionSettings
+public class AmazonCommandPromptExecutionSettings : PromptExecutionSettings
 {
     private double? _temperature;
     private double? _topP;
@@ -169,17 +169,17 @@ public class AmazonCommandExecutionSettings : PromptExecutionSettings
     /// </summary>
     /// <param name="executionSettings">The Kernel standard PromptExecutionSettings.</param>
     /// <returns>Model specific execution settings</returns>
-    public static AmazonCommandExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
+    public static AmazonCommandPromptExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
     {
         switch (executionSettings)
         {
             case null:
-                return new AmazonCommandExecutionSettings();
-            case AmazonCommandExecutionSettings settings:
+                return new AmazonCommandPromptExecutionSettings();
+            case AmazonCommandPromptExecutionSettings settings:
                 return settings;
         }
 
         var json = JsonSerializer.Serialize(executionSettings);
-        return JsonSerializer.Deserialize<AmazonCommandExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
+        return JsonSerializer.Deserialize<AmazonCommandPromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
     }
 }

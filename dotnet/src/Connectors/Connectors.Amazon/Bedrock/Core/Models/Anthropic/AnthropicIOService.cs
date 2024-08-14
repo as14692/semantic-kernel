@@ -19,7 +19,7 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonClaudeExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonClaudePromptExecutionSettings.FromExecutionSettings(executionSettings);
         var requestBody = new ClaudeRequest.ClaudeTextGenerationRequest()
         {
             Prompt = $"\n\nHuman: {prompt}\n\nAssistant:",
@@ -52,7 +52,7 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonClaudeExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonClaudePromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens_to_sample") ?? exec.MaxTokensToSample;
@@ -135,7 +135,7 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonClaudeExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonClaudePromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens_to_sample") ?? exec.MaxTokensToSample;

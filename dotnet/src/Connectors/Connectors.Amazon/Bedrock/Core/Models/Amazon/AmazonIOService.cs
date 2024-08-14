@@ -18,7 +18,7 @@ internal sealed class AmazonIOService : IBedrockTextGenerationIOService, IBedroc
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonTitanExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonTitanPromptExecutionSettings.FromExecutionSettings(executionSettings);
         var temperature = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "topP") ?? exec.TopP;
         var maxTokenCount = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "maxTokenCount") ?? exec.MaxTokenCount;
@@ -59,7 +59,7 @@ internal sealed class AmazonIOService : IBedrockTextGenerationIOService, IBedroc
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonTitanExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonTitanPromptExecutionSettings.FromExecutionSettings(settings);
         var temperature = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "topP") ?? exec.TopP;
         var maxTokenCount = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "maxTokenCount") ?? exec.MaxTokenCount;
@@ -100,7 +100,7 @@ internal sealed class AmazonIOService : IBedrockTextGenerationIOService, IBedroc
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonTitanExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonTitanPromptExecutionSettings.FromExecutionSettings(settings);
         var temperature = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "topP") ?? exec.TopP;
         var maxTokenCount = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "maxTokenCount") ?? exec.MaxTokenCount;

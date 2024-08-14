@@ -18,7 +18,7 @@ internal sealed class AI21JurassicIOService : IBedrockTextGenerationIOService
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonJurassicExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonJurassicPromptExecutionSettings.FromExecutionSettings(executionSettings);
         var requestBody = new AI21JurassicRequest.AI21JurassicTextGenerationRequest
         {
             Prompt = prompt,

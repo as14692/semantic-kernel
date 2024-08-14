@@ -290,7 +290,7 @@ public class BedrockTextGenerationServiceTests
             });
         var kernel = Kernel.CreateBuilder().AddBedrockTextGenerationService(modelId, mockBedrockApi.Object).Build();
         var service = kernel.GetRequiredService<ITextGenerationService>();
-        var invalidSettings = new AmazonTitanExecutionSettings()
+        var invalidSettings = new AmazonTitanPromptExecutionSettings()
         {
             Temperature = -1.0f,
             TopP = -0.5f,

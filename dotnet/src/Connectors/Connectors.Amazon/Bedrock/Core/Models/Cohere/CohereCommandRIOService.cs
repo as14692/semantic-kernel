@@ -20,7 +20,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonCommandRExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonCommandRPromptExecutionSettings.FromExecutionSettings(executionSettings);
         var chatHistory = BedrockModelUtilities.GetExtensionDataValue<List<CohereCommandRTools.ChatMessage>>(executionSettings?.ExtensionData, "chat_history") ?? exec.ChatHistory;
         if (chatHistory == null || chatHistory.Count == 0)
         {
@@ -76,7 +76,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonCommandRExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonCommandRPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.MaxTokens;
@@ -155,7 +155,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonCommandRExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonCommandRPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.MaxTokens;

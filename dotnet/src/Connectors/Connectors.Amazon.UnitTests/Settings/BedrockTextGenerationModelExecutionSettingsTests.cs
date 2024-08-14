@@ -31,7 +31,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "meta.llama3-text-generation";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonLlama3ExecutionSettings()
+        var executionSettings = new AmazonLlama3PromptExecutionSettings()
         {
             Temperature = -10.0f,
             TopP = -2.0f,
@@ -107,7 +107,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "amazon.titan-text-lite-v1";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonTitanExecutionSettings()
+        var executionSettings = new AmazonTitanPromptExecutionSettings()
         {
             ModelId = modelId,
             ExtensionData = new Dictionary<string, object>()
@@ -191,7 +191,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "amazon.titan-text-lite-v1";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonTitanExecutionSettings()
+        var executionSettings = new AmazonTitanPromptExecutionSettings()
         {
             Temperature = 0.1f,
             TopP = 0.95f,
@@ -273,7 +273,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "ai21.jamba-instruct-v1:0";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonJambaExecutionSettings()
+        var executionSettings = new AmazonJambaPromptExecutionSettings()
         {
             ModelId = modelId,
             ExtensionData = new Dictionary<string, object>()
@@ -381,7 +381,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "ai21.jamba-instruct-v1:0";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonJambaExecutionSettings()
+        var executionSettings = new AmazonJambaPromptExecutionSettings()
         {
             Temperature = 0.8f,
             TopP = 0.95f,
@@ -487,7 +487,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "ai21.j2-ultra-v1";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonJurassicExecutionSettings()
+        var executionSettings = new AmazonJurassicPromptExecutionSettings()
         {
             ModelId = modelId,
             ExtensionData = new Dictionary<string, object>()
@@ -645,7 +645,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "cohere.command-text-generation";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonCommandExecutionSettings()
+        var executionSettings = new AmazonCommandPromptExecutionSettings()
         {
             ModelId = modelId,
             ExtensionData = new Dictionary<string, object>()
@@ -726,7 +726,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "cohere.command-text-generation";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonCommandExecutionSettings()
+        var executionSettings = new AmazonCommandPromptExecutionSettings()
         {
             Temperature = 0.8,
             TopP = 0.95,
@@ -805,7 +805,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "mistral.mistral-text-generation";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonMistralExecutionSettings()
+        var executionSettings = new AmazonMistralPromptExecutionSettings()
         {
             ModelId = modelId,
             ExtensionData = new Dictionary<string, object>()
@@ -877,7 +877,7 @@ public class BedrockTextGenerationModelExecutionSettingsTests
         // Arrange
         string modelId = "mistral.mistral-text-generation";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonMistralExecutionSettings()
+        var executionSettings = new AmazonMistralPromptExecutionSettings()
         {
             Temperature = 0.8f,
             TopP = 0.95f,
