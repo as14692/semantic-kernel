@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
@@ -9,7 +10,6 @@ internal static class TitanRequest
     /// <summary>
     /// The Amazon Titan Text Generation Request object.
     /// </summary>
-    [Serializable]
     internal sealed class TitanTextGenerationRequest
     {
         /// <summary>
@@ -17,6 +17,7 @@ internal static class TitanRequest
         /// </summary>
         [JsonPropertyName("inputText")]
         public required string InputText { get; set; }
+
         /// <summary>
         /// Text generation configurations as required by Amazon Titan request body.
         /// </summary>
@@ -24,10 +25,10 @@ internal static class TitanRequest
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public AmazonTitanTextGenerationConfig? TextGenerationConfig { get; set; }
     }
+
     /// <summary>
     /// Amazon Titan Text Generation Configurations.
     /// </summary>
-    [Serializable]
     internal class AmazonTitanTextGenerationConfig
     {
         /// <summary>

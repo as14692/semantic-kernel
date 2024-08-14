@@ -3,13 +3,11 @@
 using System;
 using Amazon.BedrockRuntime;
 using Amazon.Runtime;
-using Connectors.Amazon.Bedrock.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.Amazon;
 using Microsoft.SemanticKernel.Connectors.Amazon.Core;
-using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
 
 namespace Microsoft.SemanticKernel;
@@ -17,18 +15,18 @@ namespace Microsoft.SemanticKernel;
 /// <summary>
 /// Extensions for adding Bedrock services to the application.
 /// </summary>
-public static class BedrockKernelBuilderExtensions
+public static class BedrockServiceCollectionExtensions
 {
     /// <summary>
     /// Add Amazon Bedrock Chat Completion service to the kernel builder using IAmazonBedrockRuntime object.
     /// </summary>
-    /// <param name="builder">The kernel builder.</param>
+    /// <param name="service">The kernel builder.</param>
     /// <param name="modelId">The model for chat completion.</param>
     /// <param name="bedrockRuntime">The IAmazonBedrockRuntime to run inference using the respective model.</param>
     /// <param name="serviceId">The optional service ID.</param>
     /// <returns><see cref="IKernelBuilder"/> object.</returns>
-    public static IKernelBuilder AddBedrockChatCompletionService(
-        this IKernelBuilder builder,
+    public static IServiceCollection AddBedrockChatCompletionService(
+        this IServiceCollection service,
         string modelId,
         IAmazonBedrockRuntime? bedrockRuntime = null,
         string? serviceId = null)
@@ -36,10 +34,10 @@ public static class BedrockKernelBuilderExtensions
         if (bedrockRuntime == null)
         {
             // Add IAmazonBedrockRuntime service client to the DI container
-            builder.Services.TryAddAWSService<IAmazonBedrockRuntime>();
+            service.TryAddAWSService<IAmazonBedrockRuntime>();
         }
 
-        builder.Services.AddKeyedSingleton<IChatCompletionService>(serviceId, (serviceProvider, _) =>
+        service.AddKeyedSingleton<IChatCompletionService>(serviceId, (serviceProvider, _) =>
         {
             try
             {
@@ -59,19 +57,19 @@ public static class BedrockKernelBuilderExtensions
             }
         });
 
-        return builder;
+        return service;
     }
 
     /// <summary>
     /// Add Amazon Bedrock Text Generation service to the kernel builder using IAmazonBedrockRuntime object.
     /// </summary>
-    /// <param name="builder">The kernel builder.</param>
+    /// <param name="services">The kernel builder.</param>
     /// <param name="modelId">The model for text generation.</param>
     /// <param name="bedrockRuntime">The IAmazonBedrockRuntime to run inference using the respective model.</param>
     /// <param name="serviceId">The optional service ID.</param>
     /// <returns><see cref="IKernelBuilder"/> object.</returns>
-    public static IKernelBuilder AddBedrockTextGenerationService(
-        this IKernelBuilder builder,
+    public static IServiceCollection AddBedrockTextGenerationService(
+        this IServiceCollection services,
         string modelId,
         IAmazonBedrockRuntime? bedrockRuntime = null,
         string? serviceId = null)
@@ -79,9 +77,9 @@ public static class BedrockKernelBuilderExtensions
         if (bedrockRuntime == null)
         {
             // Add IAmazonBedrockRuntime service client to the DI container
-            builder.Services.TryAddAWSService<IAmazonBedrockRuntime>();
+            services.TryAddAWSService<IAmazonBedrockRuntime>();
         }
-        builder.Services.AddKeyedSingleton<ITextGenerationService>(serviceId, (serviceProvider, _) =>
+        services.AddKeyedSingleton<ITextGenerationService>(serviceId, (serviceProvider, _) =>
         {
             try
             {
@@ -101,51 +99,7 @@ public static class BedrockKernelBuilderExtensions
             }
         });
 
-        return builder;
-    }
-
-    /// <summary>
-    /// Add Amazon Bedrock Text Embedding Generation service to the kernel builder using IAmazonBedrockRuntime object.
-    /// </summary>
-    /// <param name="builder">The kernel builder.</param>
-    /// <param name="modelId">The model for text embedding generation.</param>
-    /// <param name="bedrockRuntime">The IAmazonBedrockRuntime to run inference using the respective model.</param>
-    /// <param name="serviceId">The optional service ID.</param>
-    /// <returns></returns>
-    public static IKernelBuilder AddBedrockTextEmbeddingGenerationService(
-        this IKernelBuilder builder,
-        string modelId,
-        IAmazonBedrockRuntime? bedrockRuntime = null,
-        string? serviceId = null)
-    {
-        if (bedrockRuntime == null)
-        {
-            // Add IAmazonBedrockRuntime service client to the DI container
-            builder.Services.TryAddAWSService<IAmazonBedrockRuntime>();
-        }
-
-        builder.Services.AddKeyedSingleton<ITextEmbeddingGenerationService>(serviceId, (serviceProvider, _) =>
-        {
-            try
-            {
-                IAmazonBedrockRuntime runtime = bedrockRuntime ?? serviceProvider.GetRequiredService<IAmazonBedrockRuntime>();
-                var logger = serviceProvider.GetService<ILoggerFactory>();
-                // Check if the runtime instance is a proxy object
-                if (runtime.GetType().BaseType == typeof(AmazonServiceClient))
-                {
-                    // Cast to AmazonServiceClient and subscribe to the event
-                    ((AmazonServiceClient)runtime).BeforeRequestEvent += AWSServiceClient_BeforeServiceRequest;
-                }
-
-                return new BedrockTextEmbeddingGenerationService(modelId, runtime, logger);
-            }
-            catch (Exception ex)
-            {
-                throw new KernelException($"An error occurred while initializing the {nameof(BedrockTextEmbeddingGenerationService)}: {ex.Message}", ex);
-            }
-        });
-
-        return builder;
+        return services;
     }
 
     internal static void AWSServiceClient_BeforeServiceRequest(object sender, RequestEventArgs e)

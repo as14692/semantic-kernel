@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.SemanticKernel.Connectors.Amazon.Core;
 using Microsoft.SemanticKernel.Text;
 
 namespace Microsoft.SemanticKernel.Connectors.Amazon;
@@ -11,7 +11,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon;
 /// Prompt execution settings for AI21 Labs Jurassic Text Generation
 /// </summary>
 [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-public class AmazonJurassicExecutionSettings : PromptExecutionSettings
+public class AmazonJurassicPromptExecutionSettings : PromptExecutionSettings
 {
     private float? _temperature;
     private float? _topP;
@@ -122,19 +122,19 @@ public class AmazonJurassicExecutionSettings : PromptExecutionSettings
     /// <summary>
     /// Converts PromptExecutionSettings to AmazonJurassicExecutionSettings
     /// </summary>
-    /// <param name="executionSettings"></param>
-    /// <returns></returns>
-    public static AmazonJurassicExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
+    /// <param name="executionSettings">The Kernel standard PromptExecutionSettings.</param>
+    /// <returns>Model specific execution settings</returns>
+    public static AmazonJurassicPromptExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
     {
         switch (executionSettings)
         {
             case null:
-                return new AmazonJurassicExecutionSettings();
-            case AmazonJurassicExecutionSettings settings:
+                return new AmazonJurassicPromptExecutionSettings();
+            case AmazonJurassicPromptExecutionSettings settings:
                 return settings;
         }
 
         var json = JsonSerializer.Serialize(executionSettings);
-        return JsonSerializer.Deserialize<AmazonJurassicExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
+        return JsonSerializer.Deserialize<AmazonJurassicPromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
     }
 }

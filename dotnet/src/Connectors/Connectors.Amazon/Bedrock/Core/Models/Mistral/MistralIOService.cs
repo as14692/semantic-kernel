@@ -1,5 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
@@ -13,16 +16,10 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 /// </summary>
 internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedrockChatCompletionIOService
 {
-    /// <summary>
-    /// Builds InvokeModel request Body parameter with structure as required by Mistral.
-    /// </summary>
-    /// <param name="modelId">The model ID to be used as a request parameter.</param>
-    /// <param name="prompt">The input prompt for text generation.</param>
-    /// <param name="executionSettings">Optional prompt execution settings.</param>
-    /// <returns></returns>
-    object IBedrockTextGenerationIOService.GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
+    /// <inheritdoc/>
+    public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonMistralExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonMistralPromptExecutionSettings.FromExecutionSettings(executionSettings);
         var temperature = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "max_tokens") ?? exec.MaxTokens;
@@ -42,12 +39,8 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         return requestBody;
     }
 
-    /// <summary>
-    /// Extracts the test contents from the InvokeModelResponse as returned by the Bedrock API.
-    /// </summary>
-    /// <param name="response">The InvokeModelResponse object provided by the Bedrock InvokeModelAsync output.</param>
-    /// <returns>A list of text content objects as required by the semantic kernel.</returns>
-    IReadOnlyList<TextContent> IBedrockTextGenerationIOService.GetInvokeResponseBody(InvokeModelResponse response)
+    /// <inheritdoc/>
+    public IReadOnlyList<TextContent> GetInvokeResponseBody(InvokeModelResponse response)
     {
         using var reader = new StreamReader(response.Body);
         var responseBody = JsonSerializer.Deserialize<MistralResponse>(reader.ReadToEnd());
@@ -60,19 +53,13 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         return textContents;
     }
 
-    /// <summary>
-    /// Builds the ConverseRequest object for the Bedrock ConverseAsync call with request parameters required by Mistral.
-    /// </summary>
-    /// <param name="modelId">The model ID.</param>
-    /// <param name="chatHistory">The messages between assistant and user.</param>
-    /// <param name="settings">Optional prompt execution settings.</param>
-    /// <returns></returns>
-    ConverseRequest IBedrockChatCompletionIOService.GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
+    /// <inheritdoc/>
+    public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
     {
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonMistralExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonMistralPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.TopK;
@@ -94,12 +81,8 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         return converseRequest;
     }
 
-    /// <summary>
-    /// Extracts the text generation streaming output from the Mistral response object structure.
-    /// </summary>
-    /// <param name="chunk"></param>
-    /// <returns></returns>
-    IEnumerable<string> IBedrockTextGenerationIOService.GetTextStreamOutput(JsonNode chunk)
+    /// <inheritdoc/>
+    public IEnumerable<string> GetTextStreamOutput(JsonNode chunk)
     {
         var outputs = chunk["outputs"]?.AsArray();
         if (outputs != null)
@@ -115,19 +98,13 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         }
     }
 
-    /// <summary>
-    /// Builds the ConverseStreamRequest object for the Converse Bedrock API call, including building the Mistral Request object and mapping parameters to the ConverseStreamRequest object.
-    /// </summary>
-    /// <param name="modelId">The model ID.</param>
-    /// <param name="chatHistory">The messages between assistant and user.</param>
-    /// <param name="settings">Optional prompt execution settings.</param>
-    /// <returns></returns>
-    ConverseStreamRequest IBedrockChatCompletionIOService.GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
+    /// <inheritdoc/>
+    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
     {
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonMistralExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonMistralPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.TopK;
