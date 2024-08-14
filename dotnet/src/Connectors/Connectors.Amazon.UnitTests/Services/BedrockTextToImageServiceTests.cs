@@ -11,13 +11,12 @@ using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime.Endpoints;
 using Connectors.Amazon.Bedrock.Services;
 using Connectors.Amazon.Models.Stability;
-using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Services;
 using Microsoft.SemanticKernel.TextToImage;
 using Moq;
 using Xunit;
 
-namespace Connectors.Amazon.UnitTests.Services;
+namespace Microsoft.SemanticKernel.Connectors.Amazon.UnitTests;
 
 /// <summary>
 /// Unit tests for Text to Image service.
