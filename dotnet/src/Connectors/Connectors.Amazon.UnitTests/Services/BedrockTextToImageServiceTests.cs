@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -36,6 +37,61 @@ public class BedrockTextToImageServiceTests
 
         // Assert
         Assert.Equal(modelId, service.Attributes[AIServiceExtensions.ModelIdKey]);
+    }
+
+    /// <summary>
+    /// Checks that an invalid model ID cannot create a new service.
+    /// </summary>
+    [Fact]
+    public void ShouldThrowExceptionForInvalidModelId()
+    {
+        // Arrange
+        string invalidModelId = "invalid_model_id";
+        var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
+
+        // Act
+        var kernel = Kernel.CreateBuilder().AddBedrockTextToImageService(invalidModelId, mockBedrockApi.Object).Build();
+
+        // Assert
+        Assert.Throws<KernelException>(() =>
+            kernel.GetRequiredService<ITextToImageService>());
+    }
+
+    /// <summary>
+    /// Checks that an empty model ID cannot create a new service.
+    /// </summary>
+    [Fact]
+    public void ShouldThrowExceptionForEmptyModelId()
+    {
+        // Arrange
+        string emptyModelId = string.Empty;
+        var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
+
+        // Act
+        var kernel = Kernel.CreateBuilder().AddBedrockTextToImageService(emptyModelId, mockBedrockApi.Object).Build();
+
+        // Assert
+        Assert.Throws<KernelException>(() =>
+            kernel.GetRequiredService<ITextToImageService>());
+    }
+
+    /// <summary>
+    /// Checks that an invalid BedrockRuntime object will throw an exception.
+    /// </summary>
+    [Fact]
+    public async Task ShouldThrowExceptionForNullBedrockRuntimeAsync()
+    {
+        // Arrange
+        string modelId = "mistral.mistral-text-lite-v1";
+        IAmazonBedrockRuntime? nullBedrockRuntime = null;
+
+        // Act & Assert
+        await Assert.ThrowsAnyAsync<Exception>(async () =>
+        {
+            var kernel = Kernel.CreateBuilder().AddBedrockTextToImageService(modelId, nullBedrockRuntime).Build();
+            var service = kernel.GetRequiredService<ITextToImageService>();
+            await service.GenerateImageAsync("sample_prompt", 256, 256).ConfigureAwait(true);
+        }).ConfigureAwait(true);
     }
 
     /// <summary>
