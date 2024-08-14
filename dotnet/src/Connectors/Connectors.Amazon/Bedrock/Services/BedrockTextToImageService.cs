@@ -1,5 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.BedrockRuntime;
 using Connectors.Amazon.Bedrock.Core.Clients;
 using Microsoft.Extensions.Logging;

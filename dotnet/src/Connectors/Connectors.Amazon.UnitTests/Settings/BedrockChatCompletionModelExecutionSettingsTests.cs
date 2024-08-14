@@ -1,5 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime.Endpoints;
@@ -28,7 +33,7 @@ public class BedrockChatCompletionModelExecutionSettingsTests
             {
                 URL = "https://bedrock-runtime.us-east-1.amazonaws.com"
             });
-        var invalidSettings = new AmazonTitanExecutionSettings()
+        var invalidSettings = new AmazonTitanPromptExecutionSettings()
         {
             Temperature = -1.0f,
             TopP = -0.5f,
@@ -51,7 +56,7 @@ public class BedrockChatCompletionModelExecutionSettingsTests
         // Arrange
         string modelId = "mistral.mistral-text-lite-v1";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonMistralExecutionSettings()
+        var executionSettings = new AmazonMistralPromptExecutionSettings()
         {
             Temperature = 0.0f,
             TopP = 0.0f,
@@ -116,7 +121,7 @@ public class BedrockChatCompletionModelExecutionSettingsTests
         // Arrange
         string modelId = "amazon.titan-text-lite-v1";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonTitanExecutionSettings()
+        var executionSettings = new AmazonTitanPromptExecutionSettings()
         {
             ModelId = modelId,
             ExtensionData = new Dictionary<string, object>()
@@ -174,7 +179,7 @@ public class BedrockChatCompletionModelExecutionSettingsTests
         // Arrange
         string modelId = "amazon.titan-text-lite-v1";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonTitanExecutionSettings()
+        var executionSettings = new AmazonTitanPromptExecutionSettings()
         {
             Temperature = 0.3f,
             TopP = 0.8f,
@@ -230,7 +235,7 @@ public class BedrockChatCompletionModelExecutionSettingsTests
         // Arrange
         string modelId = "anthropic.claude-chat-completion";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonClaudeExecutionSettings()
+        var executionSettings = new AmazonClaudePromptExecutionSettings()
         {
             ModelId = modelId,
             ExtensionData = new Dictionary<string, object>()
@@ -288,7 +293,7 @@ public class BedrockChatCompletionModelExecutionSettingsTests
         // Arrange
         string modelId = "anthropic.claude-chat-completion";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonClaudeExecutionSettings()
+        var executionSettings = new AmazonClaudePromptExecutionSettings()
         {
             Temperature = 0.7f,
             TopP = 0.7f,
@@ -401,7 +406,7 @@ public class BedrockChatCompletionModelExecutionSettingsTests
         // Arrange
         string modelId = "cohere.command-r-chat-stuff";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonCommandRExecutionSettings()
+        var executionSettings = new AmazonCommandRPromptExecutionSettings()
         {
             ModelId = modelId,
             ExtensionData = new Dictionary<string, object>()
@@ -459,7 +464,7 @@ public class BedrockChatCompletionModelExecutionSettingsTests
         // Arrange
         string modelId = "cohere.command-r-chat-stuff";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonCommandRExecutionSettings()
+        var executionSettings = new AmazonCommandRPromptExecutionSettings()
         {
             Temperature = 0.7f,
             TopP = 0.9f,
@@ -515,7 +520,7 @@ public class BedrockChatCompletionModelExecutionSettingsTests
         // Arrange
         string modelId = "ai21.jamba-chat-stuff";
         var mockBedrockApi = new Mock<IAmazonBedrockRuntime>();
-        var executionSettings = new AmazonJambaExecutionSettings()
+        var executionSettings = new AmazonJambaPromptExecutionSettings()
         {
             Temperature = 0.7f,
             ModelId = modelId,

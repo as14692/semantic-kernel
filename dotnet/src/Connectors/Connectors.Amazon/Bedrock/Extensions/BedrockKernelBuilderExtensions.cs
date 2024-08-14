@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-using System.Reflection;
+using System;
 using Amazon.BedrockRuntime;
 using Amazon.Runtime;
 using Connectors.Amazon.Bedrock.Services;
@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.Amazon;
+using Microsoft.SemanticKernel.Connectors.Amazon.Core;
 using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
 using Microsoft.SemanticKernel.TextToImage;
@@ -26,7 +27,7 @@ public static class BedrockKernelBuilderExtensions
     /// <param name="modelId">The model for chat completion.</param>
     /// <param name="bedrockRuntime">The IAmazonBedrockRuntime to run inference using the respective model.</param>
     /// <param name="serviceId">The optional service ID.</param>
-    /// <returns></returns>
+    /// <returns><see cref="IKernelBuilder"/> object.</returns>
     public static IKernelBuilder AddBedrockChatCompletionService(
         this IKernelBuilder builder,
         string modelId,
@@ -69,7 +70,7 @@ public static class BedrockKernelBuilderExtensions
     /// <param name="modelId">The model for text generation.</param>
     /// <param name="bedrockRuntime">The IAmazonBedrockRuntime to run inference using the respective model.</param>
     /// <param name="serviceId">The optional service ID.</param>
-    /// <returns></returns>
+    /// <returns><see cref="IKernelBuilder"/> object.</returns>
     public static IKernelBuilder AddBedrockTextGenerationService(
         this IKernelBuilder builder,
         string modelId,
@@ -192,15 +193,12 @@ public static class BedrockKernelBuilderExtensions
         return builder;
     }
 
-    private const string UserAgentHeader = "User-Agent";
-    private static readonly string s_userAgentString = $"lib/semantic-kernel#{Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty}";
-
     internal static void AWSServiceClient_BeforeServiceRequest(object sender, RequestEventArgs e)
     {
-        if (e is not WebServiceRequestEventArgs args || !args.Headers.TryGetValue(UserAgentHeader, out string? value) || value.Contains(s_userAgentString))
+        if (e is not WebServiceRequestEventArgs args || !args.Headers.TryGetValue(BedrockClientUtilities.UserAgentHeader, out string? value) || value.Contains(BedrockClientUtilities.UserAgentString))
         {
             return;
         }
-        args.Headers[UserAgentHeader] = $"{value} {s_userAgentString}";
+        args.Headers[BedrockClientUtilities.UserAgentHeader] = $"{value} {BedrockClientUtilities.UserAgentString}";
     }
 }

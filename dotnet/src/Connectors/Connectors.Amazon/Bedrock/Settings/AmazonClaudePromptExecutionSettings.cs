@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.SemanticKernel.Text;
@@ -10,7 +11,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon;
 /// Prompt execution settings for Anthropic Claude Text Generation
 /// </summary>
 [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-public class AmazonClaudeExecutionSettings : PromptExecutionSettings
+public class AmazonClaudePromptExecutionSettings : PromptExecutionSettings
 {
     private int _maxTokensToSample;
     private List<string>? _stopSequences;
@@ -96,19 +97,19 @@ public class AmazonClaudeExecutionSettings : PromptExecutionSettings
     /// <summary>
     /// Converts PromptExecutionSettings to ClaudeExecutionSettings
     /// </summary>
-    /// <param name="executionSettings"></param>
-    /// <returns></returns>
-    public static AmazonClaudeExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
+    /// <param name="executionSettings">The Kernel standard PromptExecutionSettings.</param>
+    /// <returns>Model specific execution settings.</returns>
+    public static AmazonClaudePromptExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
     {
         switch (executionSettings)
         {
             case null:
-                return new AmazonClaudeExecutionSettings() { MaxTokensToSample = DefaultTextMaxTokens };
-            case AmazonClaudeExecutionSettings settings:
+                return new AmazonClaudePromptExecutionSettings { MaxTokensToSample = DefaultTextMaxTokens };
+            case AmazonClaudePromptExecutionSettings settings:
                 return settings;
         }
 
         var json = JsonSerializer.Serialize(executionSettings);
-        return JsonSerializer.Deserialize<AmazonClaudeExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
+        return JsonSerializer.Deserialize<AmazonClaudePromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
     }
 }

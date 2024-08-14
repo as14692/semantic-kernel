@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using Amazon.BedrockRuntime.Model;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.Amazon.Core;
+using Connectors.Amazon.Models.Stability;
 
-namespace Connectors.Amazon.Models.Stability;
+namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 
 /// <summary>
 /// StabilityIOService class for handling StabilityIO requests and responses.
