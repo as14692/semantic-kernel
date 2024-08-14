@@ -50,7 +50,6 @@ internal class TitanTextResponse
 /// <summary>
 /// The Amazon Titan Embedding response object when deserialized from Invoke Model call.
 /// </summary>
-[Serializable]
 public class TitanEmbeddingResponse
 {
     /// <summary>
