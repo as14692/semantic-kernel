@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
 
 // List of available models
@@ -27,6 +28,9 @@ switch (choice)
         break;
     case 4:
         await PerformStreamTextGeneration().ConfigureAwait(false);
+        break;
+    case 5:
+        await PerformTextEmbedding().ConfigureAwait(false);
         break;
 }
 
@@ -166,6 +170,29 @@ async Task PerformStreamTextGeneration()
     Console.WriteLine();
 }
 
+async Task PerformTextEmbedding()
+{
+    // Get available text embedding models
+    var availableTextEmbeddingModels = bedrockModels.Values
+        .Where(m => m.Modalities.Contains(ModelDefinition.SupportedModality.TextEmbedding))
+        .ToDictionary(m => bedrockModels.Single(kvp => kvp.Value.Name == m.Name).Key, m => m.Name);
+
+    // Show user what models are available and let them choose
+    int chosenStreamTextGenerationModel = GetModelNumber(availableTextEmbeddingModels, "text embedding");
+
+    Console.Write("Enter the text you want to embed: ");
+    string inputText = Console.ReadLine() ?? "";
+
+    var embedKernel = Kernel.CreateBuilder().AddBedrockTextEmbeddingGenerationService(availableTextEmbeddingModels[chosenStreamTextGenerationModel]).Build();
+    var textEmbeddingService = embedKernel.GetRequiredService<ITextEmbeddingGenerationService>();
+    var textEmbedding = await textEmbeddingService.GenerateEmbeddingsAsync(new[] { inputText }).ConfigureAwait(true);
+
+    foreach (var embedding in textEmbedding)
+    {
+        Console.WriteLine($"Generated embeddings: {string.Join(", ", embedding.Span.ToArray())}");
+    }
+}
+
 // Get the user's model choice
 int GetUserChoice()
 {
@@ -177,12 +204,13 @@ int GetUserChoice()
     Console.WriteLine("2. Text Generation");
     Console.WriteLine("3. Stream Chat Completion");
     Console.WriteLine("4. Stream Text Generation");
+    Console.WriteLine("5. Text Embedding");
 
-    Console.Write("Enter your choice (1-4): ");
-    while (!int.TryParse(Console.ReadLine(), out pick) || pick < 1 || pick > 4)
+    Console.Write("Enter your choice (1-5): ");
+    while (!int.TryParse(Console.ReadLine(), out pick) || pick < 1 || pick > 5)
     {
         Console.WriteLine("Invalid input. Please enter a valid number from the list.");
-        Console.Write("Enter your choice (1-4): ");
+        Console.Write("Enter your choice (1-5): ");
     }
 
     return pick;
@@ -233,7 +261,11 @@ Dictionary<int, ModelDefinition> GetBedrockModels()
         { 18, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "mistral.mistral-small-2402-v1:0", CanStream = true } },
         { 19, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "amazon.titan-text-lite-v1", CanStream = true } },
         { 20, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "amazon.titan-text-express-v1", CanStream = true } },
-        { 21, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "amazon.titan-text-premier-v1:0", CanStream = true } }
+        { 21, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "amazon.titan-text-premier-v1:0", CanStream = true } },
+        { 22, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.TextEmbedding], Name = "amazon.titan-embed-text-v2:0", CanStream = false} },
+        { 23, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.TextEmbedding], Name = "amazon.titan-embed-text-v1", CanStream = false } },
+        { 24, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.TextEmbedding], Name = "cohere.embed-english-v3", CanStream = false } },
+        { 25, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.TextEmbedding], Name = "cohere.embed-multilingual-v3", CanStream = false } }
     };
 }
 
@@ -267,6 +299,10 @@ internal struct ModelDefinition
         /// <summary>
         /// Chat completion service.
         /// </summary>
-        ChatCompletion
+        ChatCompletion,
+        /// <summary>
+        /// Text Embedding service.
+        /// </summary>
+        TextEmbedding
     }
 }
