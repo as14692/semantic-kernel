@@ -13,7 +13,7 @@ internal interface IBedrockChatCompletionIOService
     /// <param name="modelId">The model ID to be used as a request parameter.</param>
     /// <param name="chatHistory">The messages for the converse call.</param>
     /// <param name="settings">Optional prompt execution settings/</param>
-    /// <returns></returns>
+    /// <returns><see cref="ConverseRequest"/> object.</returns>
     internal ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null);
 
     /// <summary>
@@ -21,7 +21,7 @@ internal interface IBedrockChatCompletionIOService
     /// </summary>
     /// <param name="modelId">The model ID for the request.</param>
     /// <param name="chatHistory">The ChatHistory object to be converted to messages for the stream converse request.</param>
-    /// <param name="settings">PromptExecutionSettings for the request.</param>
-    /// <returns></returns>
+    /// <param name="settings">Optional PromptExecutionSettings for the request.</param>
+    /// <returns><see cref="ConverseStreamRequest"/> object.</returns>
     internal ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings = null);
 }

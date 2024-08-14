@@ -1,5 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
@@ -15,20 +17,14 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService, IBedrockChatCompletionIOService
 // ReSharper restore InconsistentNaming
 {
-    /// <summary>
-    /// Builds InvokeModel request Body parameter with structure as required by Cohere Command R.
-    /// </summary>
-    /// <param name="modelId">The model ID to be used as a request parameter.</param>
-    /// <param name="prompt">The input prompt for text generation.</param>
-    /// <param name="executionSettings">Optional prompt execution settings.</param>
-    /// <returns></returns>
-    object IBedrockTextGenerationIOService.GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
+    /// <inheritdoc/>
+    public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
         var exec = AmazonCommandRExecutionSettings.FromExecutionSettings(executionSettings);
-        var chatHistory = BedrockModelUtilities.GetExtensionDataValue<List<CommandRTools.ChatMessage>>(executionSettings?.ExtensionData, "chat_history") ?? exec.ChatHistory;
+        var chatHistory = BedrockModelUtilities.GetExtensionDataValue<List<CohereCommandRTools.ChatMessage>>(executionSettings?.ExtensionData, "chat_history") ?? exec.ChatHistory;
         if (chatHistory == null || chatHistory.Count == 0)
         {
-            chatHistory = new List<CommandRTools.ChatMessage>
+            chatHistory = new List<CohereCommandRTools.ChatMessage>
             {
                 new()
                 {
@@ -41,7 +37,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         {
             Message = prompt,
             ChatHistory = chatHistory,
-            Documents = BedrockModelUtilities.GetExtensionDataValue<List<CommandRTools.Document>?>(executionSettings?.ExtensionData, "documents") ?? exec.Documents,
+            Documents = BedrockModelUtilities.GetExtensionDataValue<List<CohereCommandRTools.Document>?>(executionSettings?.ExtensionData, "documents") ?? exec.Documents,
             SearchQueriesOnly = BedrockModelUtilities.GetExtensionDataValue<bool?>(executionSettings?.ExtensionData, "search_queries_only") ?? exec.SearchQueriesOnly,
             Preamble = BedrockModelUtilities.GetExtensionDataValue<string?>(executionSettings?.ExtensionData, "preamble") ?? exec.Preamble,
             MaxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "max_tokens") ?? exec.MaxTokens,
@@ -60,12 +56,8 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         return requestBody;
     }
 
-    /// <summary>
-    /// Extracts the test contents from the InvokeModelResponse as returned by the Bedrock API.
-    /// </summary>
-    /// <param name="response">The InvokeModelResponse object provided by the Bedrock InvokeModelAsync output.</param>
-    /// <returns></returns>
-    IReadOnlyList<TextContent> IBedrockTextGenerationIOService.GetInvokeResponseBody(InvokeModelResponse response)
+    /// <inheritdoc/>
+    public IReadOnlyList<TextContent> GetInvokeResponseBody(InvokeModelResponse response)
     {
         using var reader = new StreamReader(response.Body);
         var responseBody = JsonSerializer.Deserialize<CommandRResponse>(reader.ReadToEnd());
@@ -78,14 +70,8 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         return textContents;
     }
 
-    /// <summary>
-    /// Builds the ConverseRequest object for the Bedrock ConverseAsync call with request parameters required by Cohere Command R.
-    /// </summary>
-    /// <param name="modelId">The model ID</param>
-    /// <param name="chatHistory">The messages between assistant and user.</param>
-    /// <param name="settings">Optional prompt execution settings.</param>
-    /// <returns></returns>
-    ConverseRequest IBedrockChatCompletionIOService.GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
+    /// <inheritdoc/>
+    public ConverseRequest GetConverseRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
     {
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
@@ -153,12 +139,8 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         return converseRequest;
     }
 
-    /// <summary>
-    /// Extracts the text generation streaming output from the Cohere Command R response object structure.
-    /// </summary>
-    /// <param name="chunk"></param>
-    /// <returns></returns>
-    IEnumerable<string> IBedrockTextGenerationIOService.GetTextStreamOutput(JsonNode chunk)
+    /// <inheritdoc/>
+    public IEnumerable<string> GetTextStreamOutput(JsonNode chunk)
     {
         var text = chunk["text"]?.ToString();
         if (!string.IsNullOrEmpty(text))
@@ -167,14 +149,8 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         }
     }
 
-    /// <summary>
-    /// Builds the ConverseStreamRequest object for the Converse Bedrock API call, including building the Cohere Command R Request object and mapping parameters to the ConverseStreamRequest object.
-    /// </summary>
-    /// <param name="modelId">The model ID.</param>
-    /// <param name="chatHistory">The messages between assistant and user.</param>
-    /// <param name="settings">Optional prompt execution settings.</param>
-    /// <returns></returns>
-    ConverseStreamRequest IBedrockChatCompletionIOService.GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
+    /// <inheritdoc/>
+    public ConverseStreamRequest GetConverseStreamRequest(string modelId, ChatHistory chatHistory, PromptExecutionSettings? settings)
     {
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
