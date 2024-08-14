@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Amazon.BedrockRuntime.Model;
@@ -21,24 +20,25 @@ public class StabilityIOService : IBedrockTextToImageIOService
         int height,
         PromptExecutionSettings? executionSettings = null)
     {
-        var requestBody = new
+        var requestBody = new StableRequest
         {
-            text_prompts = new List<object>()
-            {
-                new
+            TextPrompts =
+            [
+                new()
                 {
-                    text = description,
-                    weight = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "weight")
+                    Text = description,
+                    Weight = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "weight")
                 }
-            },
-            height,
-            width,
-            cfg_scale = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "cfg_scale"),
-            clip_guidance_preset = BedrockModelUtilities.GetExtensionDataValue<string?>(executionSettings?.ExtensionData, "clip_guidance_preset"),
-            samples = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "samples"),
-            seed = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "seed"),
-            steps = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "steps"),
-            style_preset = BedrockModelUtilities.GetExtensionDataValue<string?>(executionSettings?.ExtensionData, "style_preset")
+            ],
+            Height = height,
+            Width = width,
+            CfgScale = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "cfg_scale"),
+            ClipGuidancePreset = BedrockModelUtilities.GetExtensionDataValue<string?>(executionSettings?.ExtensionData, "clip_guidance_preset"),
+            Samples = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "samples"),
+            Sampler = BedrockModelUtilities.GetExtensionDataValue<string?>(executionSettings?.ExtensionData, "sampler"),
+            Seed = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "seed"),
+            Steps = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "steps"),
+            StylePreset = BedrockModelUtilities.GetExtensionDataValue<string?>(executionSettings?.ExtensionData, "style_preset")
         };
 
         return requestBody;

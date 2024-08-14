@@ -165,7 +165,7 @@ internal sealed class BedrockClientIOService
 
         switch (modelProvider.ToUpperInvariant())
         {
-            case "Stability":
+            case "STABILITY":
                 if (modelName.StartsWith("stable-", StringComparison.OrdinalIgnoreCase))
                 {
                     return new StabilityIOService();
