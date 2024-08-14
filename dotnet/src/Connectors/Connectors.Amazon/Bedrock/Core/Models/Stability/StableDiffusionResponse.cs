@@ -43,7 +43,7 @@ public static class StableDiffusionResponse
             /// <summary>
             /// The result of the image generation process. Valid values are:
             /// SUCCESS – The image generation process succeeded.
-            /// ERROR – An error occured.
+            /// ERROR – An error occurred.
             /// CONTENT_FILTERED – The content filter filtered the image and the image might be blurred.
             /// </summary>
             [JsonPropertyName("finishReason")]
