@@ -223,6 +223,7 @@ async Task PerformTextToImage()
     var textToImageService = textToImageKernel.GetRequiredService<ITextToImageService>();
 
     var imageData = await textToImageService.GenerateImageAsync(textPrompt, int.Parse(width), int.Parse(height)).ConfigureAwait(true);
+
     if (!string.IsNullOrEmpty(imageData))
     {
         Console.WriteLine("Image generation successful. Base64 image data:");

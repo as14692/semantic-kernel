@@ -47,10 +47,7 @@ public class StabilityIOService : IBedrockTextToImageIOService
     /// <inheritdoc />
     public string GetInvokeResponseForImage(InvokeModelResponse response)
     {
-        using var memoryStream = new MemoryStream();
-        response.Body.CopyToAsync(memoryStream).ConfigureAwait(false).GetAwaiter().GetResult();
-        memoryStream.Position = 0;
-        using var reader = new StreamReader(memoryStream);
+        using var reader = new StreamReader(response.Body);
         var responseBody = JsonSerializer.Deserialize<StableDiffusionResponse.StableDiffusionInvokeResponse>(reader.ReadToEnd());
         if (responseBody?.Artifacts is not { Count: > 0 })
         {
