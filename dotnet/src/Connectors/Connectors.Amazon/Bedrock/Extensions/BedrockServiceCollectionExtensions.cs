@@ -108,13 +108,13 @@ public static class BedrockServiceCollectionExtensions
     /// <summary>
     /// Add Amazon Bedrock Text Embedding Generation service to the kernel builder using IAmazonBedrockRuntime object.
     /// </summary>
-    /// <param name="builder">The kernel builder.</param>
+    /// <param name="services">The service collection.</param>
     /// <param name="modelId">The model for text embedding generation.</param>
     /// <param name="bedrockRuntime">The IAmazonBedrockRuntime to run inference using the respective model.</param>
     /// <param name="serviceId">The optional service ID.</param>
     /// <returns></returns>
-    public static IKernelBuilder AddBedrockTextEmbeddingGenerationService(
-        this IKernelBuilder builder,
+    public static IServiceCollection AddBedrockTextEmbeddingGenerationService(
+        this IServiceCollection services,
         string modelId,
         IAmazonBedrockRuntime? bedrockRuntime = null,
         string? serviceId = null)
@@ -122,10 +122,10 @@ public static class BedrockServiceCollectionExtensions
         if (bedrockRuntime == null)
         {
             // Add IAmazonBedrockRuntime service client to the DI container
-            builder.Services.TryAddAWSService<IAmazonBedrockRuntime>();
+            services.TryAddAWSService<IAmazonBedrockRuntime>();
         }
 
-        builder.Services.AddKeyedSingleton<ITextEmbeddingGenerationService>(serviceId, (serviceProvider, _) =>
+        services.AddKeyedSingleton<ITextEmbeddingGenerationService>(serviceId, (serviceProvider, _) =>
         {
             try
             {
@@ -146,19 +146,19 @@ public static class BedrockServiceCollectionExtensions
             }
         });
 
-        return builder;
+        return services;
     }
 
     /// <summary>
     /// Add Amazon Bedrock Text to Image Generation service to the kernel builder using IAmazonBedrockRuntime object.
     /// </summary>
-    /// <param name="builder">The kernel builder.</param>
+    /// <param name="services">The service collection.</param>
     /// <param name="modelId">The model for text to image generation.</param>
     /// <param name="bedrockRuntime">The IAmazonBedrockRuntime to run inference using the respective model.</param>
     /// <param name="serviceId">The optional service ID.</param>
     /// <returns></returns>
-    public static IKernelBuilder AddBedrockTextToImageService(
-        this IKernelBuilder builder,
+    public static IServiceCollection AddBedrockTextToImageService(
+        this IServiceCollection services,
         string modelId,
         IAmazonBedrockRuntime? bedrockRuntime = null,
         string? serviceId = null)
@@ -166,10 +166,10 @@ public static class BedrockServiceCollectionExtensions
         if (bedrockRuntime == null)
         {
             // Add IAmazonBedrockRuntime service client to the DI container
-            builder.Services.TryAddAWSService<IAmazonBedrockRuntime>();
+            services.TryAddAWSService<IAmazonBedrockRuntime>();
         }
 
-        builder.Services.AddKeyedSingleton<ITextToImageService>(serviceId, (serviceProvider, _) =>
+        services.AddKeyedSingleton<ITextToImageService>(serviceId, (serviceProvider, _) =>
         {
             try
             {
@@ -190,7 +190,7 @@ public static class BedrockServiceCollectionExtensions
             }
         });
 
-        return builder;
+        return services;
     }
 
     internal static void AWSServiceClient_BeforeServiceRequest(object sender, RequestEventArgs e)
