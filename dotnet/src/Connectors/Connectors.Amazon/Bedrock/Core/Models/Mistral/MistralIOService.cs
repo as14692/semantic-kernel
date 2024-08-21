@@ -69,6 +69,20 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         BedrockModelUtilities.SetPropertyIfNotNull(() => topP, value => inferenceConfig.TopP = value);
         BedrockModelUtilities.SetPropertyIfNotNull(() => maxTokens, value => inferenceConfig.MaxTokens = value);
 
+        ToolConfiguration? toolConfig = null;
+
+        if (settings?.ExtensionData != null)
+        {
+            if (settings.ExtensionData.ContainsKey("tools"))
+            {
+                toolConfig = new ToolConfiguration
+                {
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
+        }
+
         var converseRequest = new ConverseRequest
         {
             ModelId = modelId,
@@ -76,7 +90,8 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
             System = systemMessages,
             InferenceConfig = inferenceConfig,
             AdditionalModelRequestFields = new Document(),
-            AdditionalModelResponseFieldPaths = new List<string>()
+            AdditionalModelResponseFieldPaths = new List<string>(),
+            ToolConfig = toolConfig
         };
         return converseRequest;
     }
@@ -114,6 +129,20 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         BedrockModelUtilities.SetPropertyIfNotNull(() => topP, value => inferenceConfig.TopP = value);
         BedrockModelUtilities.SetPropertyIfNotNull(() => maxTokens, value => inferenceConfig.MaxTokens = value);
 
+        ToolConfiguration? toolConfig = null;
+
+        if (settings?.ExtensionData != null)
+        {
+            if (settings.ExtensionData.ContainsKey("tools"))
+            {
+                toolConfig = new ToolConfiguration
+                {
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
+        }
+
         var converseRequest = new ConverseStreamRequest()
         {
             ModelId = modelId,
@@ -121,7 +150,8 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
             System = systemMessages,
             InferenceConfig = inferenceConfig,
             AdditionalModelRequestFields = new Document(),
-            AdditionalModelResponseFieldPaths = new List<string>()
+            AdditionalModelResponseFieldPaths = new List<string>(),
+            ToolConfig = toolConfig
         };
         return converseRequest;
     }

@@ -124,6 +124,20 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         {
             additionalModelRequestFields.Add("raw_prompting", rawPrompting.Value);
         }
+
+        ToolConfiguration? toolConfig = null;
+
+        if (settings?.ExtensionData != null)
+        {
+            if (settings.ExtensionData.ContainsKey("tools"))
+            {
+                toolConfig = new ToolConfiguration
+                {
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
+        }
         var converseRequest = new ConverseRequest
         {
             ModelId = modelId,
@@ -133,7 +147,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
             AdditionalModelRequestFields = additionalModelRequestFields,
             AdditionalModelResponseFieldPaths = new List<string>(),
             GuardrailConfig = null,
-            ToolConfig = null
+            ToolConfig = toolConfig
         };
 
         return converseRequest;
@@ -203,6 +217,20 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         {
             additionalModelRequestFields.Add("raw_prompting", rawPrompting.Value);
         }
+
+        ToolConfiguration? toolConfig = null;
+
+        if (settings?.ExtensionData != null)
+        {
+            if (settings.ExtensionData.ContainsKey("tools"))
+            {
+                toolConfig = new ToolConfiguration
+                {
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
+        }
         var converseRequest = new ConverseStreamRequest()
         {
             ModelId = modelId,
@@ -212,7 +240,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
             AdditionalModelRequestFields = additionalModelRequestFields,
             AdditionalModelResponseFieldPaths = new List<string>(),
             GuardrailConfig = null,
-            ToolConfig = null
+            ToolConfig = toolConfig
         };
 
         return converseRequest;
