@@ -10,7 +10,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 /// <summary>
 /// StabilityIOService class for handling StabilityIO requests and responses.
 /// </summary>
-public class StabilityIOService : IBedrockTextToImageIOService
+internal sealed class StabilityIOService : IBedrockTextToImageIOService
 {
     /// <inheritdoc />
     public object GetInvokeRequestBodyForTextToImage(

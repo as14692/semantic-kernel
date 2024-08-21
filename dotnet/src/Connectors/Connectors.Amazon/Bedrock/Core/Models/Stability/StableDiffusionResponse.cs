@@ -8,12 +8,12 @@ namespace Connectors.Amazon.Models.Stability;
 /// <summary>
 /// Represents the response from the Stable Diffusion service.
 /// </summary>
-public static class StableDiffusionResponse
+internal static class StableDiffusionResponse
 {
     /// <summary>
     /// Response for invoke.
     /// </summary>
-    public class StableDiffusionInvokeResponse
+    internal class StableDiffusionInvokeResponse
     {
         /// <summary>
         /// The result of the operation. If successful, the response is success.
