@@ -11,7 +11,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon;
 /// Prompt execution settings for Cohere Command-R
 /// </summary>
 [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-public class AmazonCommandRExecutionSettings : PromptExecutionSettings
+public class AmazonCommandRPromptExecutionSettings : PromptExecutionSettings
 {
     private List<CohereCommandRTools.ChatMessage>? _chatHistory;
     private List<CohereCommandRTools.Document>? _documents;
@@ -274,17 +274,17 @@ public class AmazonCommandRExecutionSettings : PromptExecutionSettings
     /// </summary>
     /// <param name="executionSettings">The Kernel standard PromptExecutionSettings.</param>
     /// <returns>Model specific execution settings</returns>
-    public static AmazonCommandRExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
+    public static AmazonCommandRPromptExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
     {
         switch (executionSettings)
         {
             case null:
-                return new AmazonCommandRExecutionSettings();
-            case AmazonCommandRExecutionSettings settings:
+                return new AmazonCommandRPromptExecutionSettings();
+            case AmazonCommandRPromptExecutionSettings settings:
                 return settings;
         }
 
         var json = JsonSerializer.Serialize(executionSettings);
-        return JsonSerializer.Deserialize<AmazonCommandRExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
+        return JsonSerializer.Deserialize<AmazonCommandRPromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
     }
 }

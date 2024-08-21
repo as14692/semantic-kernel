@@ -17,7 +17,7 @@ internal sealed class CohereCommandIOService : IBedrockTextGenerationIOService
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonCommandExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonCommandPromptExecutionSettings.FromExecutionSettings(executionSettings);
         var requestBody = new CommandRequest.CohereCommandTextGenerationRequest()
         {
             Prompt = prompt,

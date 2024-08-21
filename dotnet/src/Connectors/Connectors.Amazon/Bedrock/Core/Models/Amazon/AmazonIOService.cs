@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -13,12 +14,12 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon.Core;
 /// <summary>
 /// Input-output service for Amazon Titan model.
 /// </summary>
-internal sealed class AmazonIOService : IBedrockTextGenerationIOService, IBedrockChatCompletionIOService
+internal sealed class AmazonIOService : IBedrockTextGenerationIOService, IBedrockChatCompletionIOService, IBedrockTextEmbeddingIOService
 {
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonTitanExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonTitanPromptExecutionSettings.FromExecutionSettings(executionSettings);
         var temperature = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "topP") ?? exec.TopP;
         var maxTokenCount = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "maxTokenCount") ?? exec.MaxTokenCount;
@@ -59,7 +60,7 @@ internal sealed class AmazonIOService : IBedrockTextGenerationIOService, IBedroc
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonTitanExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonTitanPromptExecutionSettings.FromExecutionSettings(settings);
         var temperature = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "topP") ?? exec.TopP;
         var maxTokenCount = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "maxTokenCount") ?? exec.MaxTokenCount;
@@ -100,7 +101,7 @@ internal sealed class AmazonIOService : IBedrockTextGenerationIOService, IBedroc
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonTitanExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonTitanPromptExecutionSettings.FromExecutionSettings(settings);
         var temperature = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "topP") ?? exec.TopP;
         var maxTokenCount = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "maxTokenCount") ?? exec.MaxTokenCount;
@@ -123,5 +124,68 @@ internal sealed class AmazonIOService : IBedrockTextGenerationIOService, IBedroc
         };
 
         return converseRequest;
+    }
+
+    /// <summary>
+    /// Builds the InvokeModelRequest body for text embedding generation requests.
+    /// </summary>
+    /// <param name="data">The data to be passed into the request.</param>
+    /// <param name="modelId">The model to be used for the request.</param>
+    /// <returns></returns>
+    public object GetEmbeddingRequestBody(string data, string modelId)
+    {
+        if (modelId.Contains("v1"))
+        {
+            return new
+            {
+                inputText = data
+            };
+        }
+
+        return new
+        {
+            inputText = data,
+            dimensions = 512,
+            normalize = true
+        };
+    }
+
+    /// <summary>
+    /// Extracts the embedding floats from the invoke model Bedrock runtime action response.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public ReadOnlyMemory<float> GetEmbeddingResponseBody(InvokeModelResponse response)
+    {
+        using (var reader = new StreamReader(response.Body))
+        {
+            var responseBody = JsonSerializer.Deserialize<TitanEmbeddingResponse>(reader.ReadToEnd());
+            if (responseBody?.Embedding is { Count: > 0 } embedding)
+            {
+                return new ReadOnlyMemory<float>(embedding.ToArray());
+            }
+
+            return ReadOnlyMemory<float>.Empty;
+        }
+    }
+
+    /// <inheritdoc />
+    /// Not supported by this model.
+    public object GetInvokeRequestBodyForTextToImage(
+        string modelId,
+        string description,
+        int width,
+        int height,
+        PromptExecutionSettings? executionSettings = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    /// Not supported by this model.
+    public string GetInvokeResponseForImage(InvokeModelResponse response)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -124,6 +124,57 @@ internal sealed class BedrockClientIOService
                 throw new NotSupportedException($"Unsupported model provider: {modelProvider}");
         }
     }
+    /// <summary>
+    /// Gets the model IO service for body conversion.
+    /// </summary>
+    /// <param name="modelId"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    internal IBedrockTextEmbeddingIOService GetEmbedIOService(string modelId)
+    {
+        (string modelProvider, string modelName) = this.GetModelProviderAndName(modelId);
+
+        switch (modelProvider.ToUpperInvariant())
+        {
+            case "AMAZON":
+                if (modelName.StartsWith("titan-", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new AmazonIOService();
+                }
+                throw new ArgumentException($"Unsupported Amazon model: {modelId}");
+            case "COHERE":
+                if (modelName.StartsWith("embed-", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new CohereEmbedIOService();
+                }
+                throw new ArgumentException($"Unsupported Cohere model: {modelId}");
+            default:
+                throw new ArgumentException($"Unsupported model provider: {modelProvider}");
+        }
+    }
+
+    /// <summary>
+    /// Gets the model IO service for body conversion.
+    /// </summary>
+    /// <param name="modelId"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    internal IBedrockTextToImageIOService GetTextToImageIOService(string modelId)
+    {
+        (string modelProvider, string modelName) = this.GetModelProviderAndName(modelId);
+
+        switch (modelProvider.ToUpperInvariant())
+        {
+            case "STABILITY":
+                if (modelName.StartsWith("stable-", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new StabilityIOService();
+                }
+                throw new NotSupportedException($"Unsupported Stability model: {modelId}");
+            default:
+                throw new ArgumentException($"Unsupported model provider: {modelProvider}");
+        }
+    }
 
     internal (string modelProvider, string modelName) GetModelProviderAndName(string modelId)
     {

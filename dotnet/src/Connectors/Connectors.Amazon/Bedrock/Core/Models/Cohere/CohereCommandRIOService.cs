@@ -20,7 +20,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonCommandRExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonCommandRPromptExecutionSettings.FromExecutionSettings(executionSettings);
         var chatHistory = BedrockModelUtilities.GetExtensionDataValue<List<CohereCommandRTools.ChatMessage>>(executionSettings?.ExtensionData, "chat_history") ?? exec.ChatHistory;
         if (chatHistory == null || chatHistory.Count == 0)
         {
@@ -76,7 +76,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonCommandRExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonCommandRPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.MaxTokens;
@@ -124,6 +124,20 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         {
             additionalModelRequestFields.Add("raw_prompting", rawPrompting.Value);
         }
+
+        ToolConfiguration? toolConfig = null;
+
+        if (settings?.ExtensionData != null)
+        {
+            if (settings.ExtensionData.ContainsKey("tools"))
+            {
+                toolConfig = new ToolConfiguration
+                {
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
+        }
         var converseRequest = new ConverseRequest
         {
             ModelId = modelId,
@@ -133,7 +147,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
             AdditionalModelRequestFields = additionalModelRequestFields,
             AdditionalModelResponseFieldPaths = new List<string>(),
             GuardrailConfig = null,
-            ToolConfig = null
+            ToolConfig = toolConfig
         };
 
         return converseRequest;
@@ -155,7 +169,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonCommandRExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonCommandRPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.MaxTokens;
@@ -203,6 +217,20 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
         {
             additionalModelRequestFields.Add("raw_prompting", rawPrompting.Value);
         }
+
+        ToolConfiguration? toolConfig = null;
+
+        if (settings?.ExtensionData != null)
+        {
+            if (settings.ExtensionData.ContainsKey("tools"))
+            {
+                toolConfig = new ToolConfiguration
+                {
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
+        }
         var converseRequest = new ConverseStreamRequest()
         {
             ModelId = modelId,
@@ -212,7 +240,7 @@ internal sealed class CohereCommandRIOService : IBedrockTextGenerationIOService,
             AdditionalModelRequestFields = additionalModelRequestFields,
             AdditionalModelResponseFieldPaths = new List<string>(),
             GuardrailConfig = null,
-            ToolConfig = null
+            ToolConfig = toolConfig
         };
 
         return converseRequest;

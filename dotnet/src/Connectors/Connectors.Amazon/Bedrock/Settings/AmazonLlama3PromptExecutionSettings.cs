@@ -10,7 +10,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon;
 /// Prompt execution settings for Meta Llama 3 Text Generation
 /// </summary>
 [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-public class AmazonLlama3ExecutionSettings : PromptExecutionSettings
+public class AmazonLlama3PromptExecutionSettings : PromptExecutionSettings
 {
     private float? _temperature;
     private float? _topP;
@@ -63,17 +63,17 @@ public class AmazonLlama3ExecutionSettings : PromptExecutionSettings
     /// </summary>
     /// <param name="executionSettings">The Kernel standard PromptExecutionSettings.</param>
     /// <returns>Model specific execution settings</returns>
-    public static AmazonLlama3ExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
+    public static AmazonLlama3PromptExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
     {
         switch (executionSettings)
         {
             case null:
-                return new AmazonLlama3ExecutionSettings();
-            case AmazonLlama3ExecutionSettings settings:
+                return new AmazonLlama3PromptExecutionSettings();
+            case AmazonLlama3PromptExecutionSettings settings:
                 return settings;
         }
 
         var json = JsonSerializer.Serialize(executionSettings);
-        return JsonSerializer.Deserialize<AmazonLlama3ExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
+        return JsonSerializer.Deserialize<AmazonLlama3PromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
     }
 }

@@ -19,7 +19,7 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonMistralExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonMistralPromptExecutionSettings.FromExecutionSettings(executionSettings);
         var temperature = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(executionSettings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(executionSettings?.ExtensionData, "max_tokens") ?? exec.MaxTokens;
@@ -59,7 +59,7 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonMistralExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonMistralPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.TopK;
@@ -69,6 +69,20 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         BedrockModelUtilities.SetPropertyIfNotNull(() => topP, value => inferenceConfig.TopP = value);
         BedrockModelUtilities.SetPropertyIfNotNull(() => maxTokens, value => inferenceConfig.MaxTokens = value);
 
+        ToolConfiguration? toolConfig = null;
+
+        if (settings?.ExtensionData != null)
+        {
+            if (settings.ExtensionData.ContainsKey("tools"))
+            {
+                toolConfig = new ToolConfiguration
+                {
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
+        }
+
         var converseRequest = new ConverseRequest
         {
             ModelId = modelId,
@@ -76,7 +90,8 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
             System = systemMessages,
             InferenceConfig = inferenceConfig,
             AdditionalModelRequestFields = new Document(),
-            AdditionalModelResponseFieldPaths = new List<string>()
+            AdditionalModelResponseFieldPaths = new List<string>(),
+            ToolConfig = toolConfig
         };
         return converseRequest;
     }
@@ -104,7 +119,7 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonMistralExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonMistralPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.TopK;
@@ -114,6 +129,20 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
         BedrockModelUtilities.SetPropertyIfNotNull(() => topP, value => inferenceConfig.TopP = value);
         BedrockModelUtilities.SetPropertyIfNotNull(() => maxTokens, value => inferenceConfig.MaxTokens = value);
 
+        ToolConfiguration? toolConfig = null;
+
+        if (settings?.ExtensionData != null)
+        {
+            if (settings.ExtensionData.ContainsKey("tools"))
+            {
+                toolConfig = new ToolConfiguration
+                {
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
+        }
+
         var converseRequest = new ConverseStreamRequest()
         {
             ModelId = modelId,
@@ -121,7 +150,8 @@ internal sealed class MistralIOService : IBedrockTextGenerationIOService, IBedro
             System = systemMessages,
             InferenceConfig = inferenceConfig,
             AdditionalModelRequestFields = new Document(),
-            AdditionalModelResponseFieldPaths = new List<string>()
+            AdditionalModelResponseFieldPaths = new List<string>(),
+            ToolConfig = toolConfig
         };
         return converseRequest;
     }

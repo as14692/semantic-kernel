@@ -6,7 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
+using Microsoft.SemanticKernel.TextToImage;
 
 // List of available models
 Dictionary<int, ModelDefinition> bedrockModels = GetBedrockModels();
@@ -27,6 +29,12 @@ switch (choice)
         break;
     case 4:
         await PerformStreamTextGeneration().ConfigureAwait(false);
+        break;
+    case 5:
+        await PerformTextEmbedding().ConfigureAwait(false);
+        break;
+    case 6:
+        await PerformTextToImage().ConfigureAwait(false);
         break;
 }
 
@@ -166,6 +174,67 @@ async Task PerformStreamTextGeneration()
     Console.WriteLine();
 }
 
+async Task PerformTextEmbedding()
+{
+    // Get available text embedding models
+    var availableTextEmbeddingModels = bedrockModels.Values
+        .Where(m => m.Modalities.Contains(ModelDefinition.SupportedModality.TextEmbedding))
+        .ToDictionary(m => bedrockModels.Single(kvp => kvp.Value.Name == m.Name).Key, m => m.Name);
+
+    // Show user what models are available and let them choose
+    int chosenStreamTextGenerationModel = GetModelNumber(availableTextEmbeddingModels, "text embedding");
+
+    Console.Write("Enter the text you want to embed: ");
+    string inputText = Console.ReadLine() ?? "";
+
+    var embedKernel = Kernel.CreateBuilder().AddBedrockTextEmbeddingGenerationService(availableTextEmbeddingModels[chosenStreamTextGenerationModel]).Build();
+    var textEmbeddingService = embedKernel.GetRequiredService<ITextEmbeddingGenerationService>();
+    var textEmbedding = await textEmbeddingService.GenerateEmbeddingsAsync(new[] { inputText }).ConfigureAwait(true);
+
+    foreach (var embedding in textEmbedding)
+    {
+        Console.WriteLine($"Generated embeddings: {string.Join(", ", embedding.Span.ToArray())}");
+    }
+}
+
+async Task PerformTextToImage()
+{
+    // Get available text to image models
+    var availableTextToImageModels = bedrockModels.Values
+        .Where(m => m.Modalities.Contains(ModelDefinition.SupportedModality.TextToImage))
+        .ToDictionary(m => bedrockModels.Single(kvp => kvp.Value.Name == m.Name).Key, m => m.Name);
+
+    // Show user what models are available and let them choose
+    int chosenStreamTextGenerationModel = GetModelNumber(availableTextToImageModels, "text to image");
+
+    Console.Write("Enter the text prompt for image generation: ");
+    string textPrompt = Console.ReadLine() ?? "";
+
+    Console.Write("Enter the desired image width: ");
+    string width = Console.ReadLine() ?? "";
+
+    Console.Write("Enter the desired image height: ");
+    string height = Console.ReadLine() ?? "";
+
+    var textToImageKernel = Kernel.CreateBuilder()
+        .AddBedrockTextToImageService(availableTextToImageModels[chosenStreamTextGenerationModel])
+        .Build();
+
+    var textToImageService = textToImageKernel.GetRequiredService<ITextToImageService>();
+
+    var imageData = await textToImageService.GenerateImageAsync(textPrompt, int.Parse(width), int.Parse(height)).ConfigureAwait(true);
+
+    if (!string.IsNullOrEmpty(imageData))
+    {
+        Console.WriteLine("Image generation successful. Base64 image data:");
+        Console.WriteLine(imageData); //https://base64.guru/converter/decode/image
+    }
+    else
+    {
+        Console.WriteLine("Image generation failed.");
+    }
+}
+
 // Get the user's model choice
 int GetUserChoice()
 {
@@ -177,12 +246,14 @@ int GetUserChoice()
     Console.WriteLine("2. Text Generation");
     Console.WriteLine("3. Stream Chat Completion");
     Console.WriteLine("4. Stream Text Generation");
+    Console.WriteLine("5. Text Embedding");
+    Console.WriteLine("6. Text to Image");
 
-    Console.Write("Enter your choice (1-4): ");
-    while (!int.TryParse(Console.ReadLine(), out pick) || pick < 1 || pick > 4)
+    Console.Write("Enter your choice (1-6): ");
+    while (!int.TryParse(Console.ReadLine(), out pick) || pick < 1 || pick > 6)
     {
         Console.WriteLine("Invalid input. Please enter a valid number from the list.");
-        Console.Write("Enter your choice (1-4): ");
+        Console.Write("Enter your choice (1-6): ");
     }
 
     return pick;
@@ -233,7 +304,12 @@ Dictionary<int, ModelDefinition> GetBedrockModels()
         { 18, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "mistral.mistral-small-2402-v1:0", CanStream = true } },
         { 19, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "amazon.titan-text-lite-v1", CanStream = true } },
         { 20, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "amazon.titan-text-express-v1", CanStream = true } },
-        { 21, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "amazon.titan-text-premier-v1:0", CanStream = true } }
+        { 21, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.ChatCompletion, ModelDefinition.SupportedModality.TextCompletion], Name = "amazon.titan-text-premier-v1:0", CanStream = true } },
+        { 22, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.TextEmbedding], Name = "amazon.titan-embed-text-v2:0", CanStream = false} },
+        { 23, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.TextEmbedding], Name = "amazon.titan-embed-text-v1", CanStream = false } },
+        { 24, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.TextEmbedding], Name = "cohere.embed-english-v3", CanStream = false } },
+        { 25, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.TextEmbedding], Name = "cohere.embed-multilingual-v3", CanStream = false } },
+        { 26, new ModelDefinition { Modalities = [ModelDefinition.SupportedModality.TextToImage], Name = "stability.stable-diffusion-xl-v1", CanStream = false } }
     };
 }
 
@@ -267,6 +343,14 @@ internal struct ModelDefinition
         /// <summary>
         /// Chat completion service.
         /// </summary>
-        ChatCompletion
+        ChatCompletion,
+        /// <summary>
+        /// Text Embedding service.
+        /// </summary>
+        TextEmbedding,
+        /// <summary>
+        /// Text to image service.
+        /// </summary>
+        TextToImage
     }
 }

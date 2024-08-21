@@ -11,7 +11,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon;
 /// Prompt execution settings for AI21 Jamba Chat Completion
 /// </summary>
 [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-public class AmazonJambaExecutionSettings : PromptExecutionSettings
+public class AmazonJambaPromptExecutionSettings : PromptExecutionSettings
 {
     private float? _temperature;
     private float? _topP;
@@ -124,17 +124,17 @@ public class AmazonJambaExecutionSettings : PromptExecutionSettings
     /// </summary>
     /// <param name="executionSettings">The Kernel standard PromptExecutionSettings.</param>
     /// <returns>Model specific execution settings</returns>
-    public static AmazonJambaExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
+    public static AmazonJambaPromptExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
     {
         switch (executionSettings)
         {
             case null:
-                return new AmazonJambaExecutionSettings();
-            case AmazonJambaExecutionSettings settings:
+                return new AmazonJambaPromptExecutionSettings();
+            case AmazonJambaPromptExecutionSettings settings:
                 return settings;
         }
 
         var json = JsonSerializer.Serialize(executionSettings);
-        return JsonSerializer.Deserialize<AmazonJambaExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
+        return JsonSerializer.Deserialize<AmazonJambaPromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
     }
 }

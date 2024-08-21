@@ -11,7 +11,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon;
 /// Prompt execution settings for Amazon Mistral
 /// </summary>
 [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-public class AmazonMistralExecutionSettings : PromptExecutionSettings
+public class AmazonMistralPromptExecutionSettings : PromptExecutionSettings
 {
     private int? _maxTokens;
     private List<string>? _stopSequences;
@@ -94,17 +94,17 @@ public class AmazonMistralExecutionSettings : PromptExecutionSettings
     /// </summary>
     /// <param name="executionSettings">The Kernel standard PromptExecutionSettings.</param>
     /// <returns>Model specific execution settings</returns>
-    public static AmazonMistralExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
+    public static AmazonMistralPromptExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
     {
         switch (executionSettings)
         {
             case null:
-                return new AmazonMistralExecutionSettings();
-            case AmazonMistralExecutionSettings settings:
+                return new AmazonMistralPromptExecutionSettings();
+            case AmazonMistralPromptExecutionSettings settings:
                 return settings;
         }
 
         var json = JsonSerializer.Serialize(executionSettings);
-        return JsonSerializer.Deserialize<AmazonMistralExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
+        return JsonSerializer.Deserialize<AmazonMistralPromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
     }
 }

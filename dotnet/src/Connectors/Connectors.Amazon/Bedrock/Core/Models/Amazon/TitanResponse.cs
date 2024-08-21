@@ -46,3 +46,21 @@ internal class TitanTextResponse
         public string? CompletionReason { get; set; }
     }
 }
+
+/// <summary>
+/// The Amazon Titan Embedding response object when deserialized from Invoke Model call.
+/// </summary>
+public class TitanEmbeddingResponse
+{
+    /// <summary>
+    /// The list of floats representing the embedding vector.
+    /// </summary>
+    [JsonPropertyName("embedding")]
+    public List<float>? Embedding { get; set; }
+
+    /// <summary>
+    /// The number of tokens in the input text.
+    /// </summary>
+    [JsonPropertyName("inputTextTokenCount")]
+    public int InputTextTokenCount { get; set; }
+}

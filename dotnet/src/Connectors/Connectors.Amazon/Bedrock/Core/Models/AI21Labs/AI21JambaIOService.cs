@@ -20,7 +20,7 @@ internal sealed class AI21JambaIOService : IBedrockTextGenerationIOService, IBed
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonJambaExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonJambaPromptExecutionSettings.FromExecutionSettings(executionSettings);
         List<AI21JambaRequest.AI21TextGenerationRequest.JambaMessage> messages = new()
         {
             new AI21JambaRequest.AI21TextGenerationRequest.JambaMessage()
@@ -66,7 +66,7 @@ internal sealed class AI21JambaIOService : IBedrockTextGenerationIOService, IBed
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonJambaExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonJambaPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.MaxTokens;
@@ -125,7 +125,7 @@ internal sealed class AI21JambaIOService : IBedrockTextGenerationIOService, IBed
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonJambaExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonJambaPromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens") ?? exec.MaxTokens;

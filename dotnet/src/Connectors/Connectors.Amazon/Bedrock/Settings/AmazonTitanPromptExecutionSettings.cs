@@ -11,7 +11,7 @@ namespace Microsoft.SemanticKernel.Connectors.Amazon;
 /// Prompt execution settings for Amazon Titan Text Generation
 /// </summary>
 [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-public class AmazonTitanExecutionSettings : PromptExecutionSettings
+public class AmazonTitanPromptExecutionSettings : PromptExecutionSettings
 {
     private float? _topP;
     private float? _temperature;
@@ -79,17 +79,17 @@ public class AmazonTitanExecutionSettings : PromptExecutionSettings
     /// </summary>
     /// <param name="executionSettings">The Kernel standard PromptExecutionSettings.</param>
     /// <returns>Model specific execution settings</returns>
-    public static AmazonTitanExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
+    public static AmazonTitanPromptExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings)
     {
         switch (executionSettings)
         {
             case null:
-                return new AmazonTitanExecutionSettings();
-            case AmazonTitanExecutionSettings settings:
+                return new AmazonTitanPromptExecutionSettings();
+            case AmazonTitanPromptExecutionSettings settings:
                 return settings;
         }
 
         var json = JsonSerializer.Serialize(executionSettings);
-        return JsonSerializer.Deserialize<AmazonTitanExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
+        return JsonSerializer.Deserialize<AmazonTitanPromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive)!;
     }
 }

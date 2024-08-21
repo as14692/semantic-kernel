@@ -18,7 +18,7 @@ internal sealed class AI21JurassicIOService : IBedrockTextGenerationIOService
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonJurassicExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonJurassicPromptExecutionSettings.FromExecutionSettings(executionSettings);
         var requestBody = new AI21JurassicRequest.AI21JurassicTextGenerationRequest
         {
             Prompt = prompt,
@@ -51,5 +51,24 @@ internal sealed class AI21JurassicIOService : IBedrockTextGenerationIOService
     public IEnumerable<string> GetTextStreamOutput(JsonNode chunk)
     {
         throw new NotSupportedException("Streaming not supported by this model.");
+    }
+
+    /// <inheritdoc />
+    /// Not supported by this model.
+    public object GetInvokeRequestBodyForTextToImage(
+        string modelId,
+        string description,
+        int width,
+        int height,
+        PromptExecutionSettings? executionSettings = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    /// Not supported by this model.
+    public string GetInvokeResponseForImage(InvokeModelResponse response)
+    {
+        throw new NotImplementedException();
     }
 }

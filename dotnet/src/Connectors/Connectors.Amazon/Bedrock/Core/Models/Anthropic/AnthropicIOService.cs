@@ -2,7 +2,6 @@
 
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.BedrockRuntime.Model;
@@ -19,7 +18,7 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonClaudeExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonClaudePromptExecutionSettings.FromExecutionSettings(executionSettings);
         var requestBody = new ClaudeRequest.ClaudeTextGenerationRequest()
         {
             Prompt = $"\n\nHuman: {prompt}\n\nAssistant:",
@@ -52,7 +51,7 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonClaudeExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonClaudePromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens_to_sample") ?? exec.MaxTokensToSample;
@@ -65,43 +64,18 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
         BedrockModelUtilities.SetStopSequenceIfNotNull(() => stopSequences, value => inferenceConfig.StopSequences = value);
 
         var additionalModelRequestFields = new Document();
-        List<ClaudeToolUse.ClaudeTool>? tools = null;
-        ClaudeToolUse.ClaudeToolChoice? toolChoice = null;
+        ToolConfiguration? toolConfig = null;
 
-        if (modelId != "anthropic.claude-instant-v1" && settings?.ExtensionData != null)
+        if (settings?.ExtensionData != null)
         {
             if (settings.ExtensionData.ContainsKey("tools"))
             {
-                tools = BedrockModelUtilities.GetExtensionDataValue<List<ClaudeToolUse.ClaudeTool>?>(settings.ExtensionData, "tools");
-            }
-
-            if (settings.ExtensionData.ContainsKey("tool_choice"))
-            {
-                toolChoice = BedrockModelUtilities.GetExtensionDataValue<ClaudeToolUse.ClaudeToolChoice?>(settings.ExtensionData, "tool_choice");
-            }
-        }
-
-        if (tools != null)
-        {
-            additionalModelRequestFields.Add(
-                "tools", new Document(tools.Select(t => new Document
+                toolConfig = new ToolConfiguration
                 {
-                    { "name", t.Name },
-                    { "description", t.Description },
-                    { "input_schema", t.InputSchema }
-                }).ToList())
-            );
-        }
-
-        if (toolChoice != null)
-        {
-            additionalModelRequestFields.Add(
-                "tool_choice", new Document
-                {
-                    { "type", toolChoice.Type },
-                    { "name", toolChoice.Name }
-                }
-            );
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
         }
 
         var converseRequest = new ConverseRequest
@@ -113,7 +87,7 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
             AdditionalModelRequestFields = additionalModelRequestFields,
             AdditionalModelResponseFieldPaths = new List<string>(),
             GuardrailConfig = null, // Set if needed
-            ToolConfig = null // Set if needed
+            ToolConfig = toolConfig
         };
 
         return converseRequest;
@@ -135,7 +109,7 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonClaudeExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonClaudePromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_tokens_to_sample") ?? exec.MaxTokensToSample;
@@ -148,43 +122,18 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
         BedrockModelUtilities.SetStopSequenceIfNotNull(() => stopSequences, value => inferenceConfig.StopSequences = value);
 
         var additionalModelRequestFields = new Document();
-        List<ClaudeToolUse.ClaudeTool>? tools = null;
-        ClaudeToolUse.ClaudeToolChoice? toolChoice = null;
+        ToolConfiguration? toolConfig = null;
 
-        if (modelId != "anthropic.claude-instant-v1" && settings?.ExtensionData != null)
+        if (settings?.ExtensionData != null)
         {
             if (settings.ExtensionData.ContainsKey("tools"))
             {
-                tools = BedrockModelUtilities.GetExtensionDataValue<List<ClaudeToolUse.ClaudeTool>?>(settings.ExtensionData, "tools");
-            }
-
-            if (settings.ExtensionData.ContainsKey("tool_choice"))
-            {
-                toolChoice = BedrockModelUtilities.GetExtensionDataValue<ClaudeToolUse.ClaudeToolChoice?>(settings.ExtensionData, "tool_choice");
-            }
-        }
-
-        if (tools != null)
-        {
-            additionalModelRequestFields.Add(
-                "tools", new Document(tools.Select(t => new Document
+                toolConfig = new ToolConfiguration
                 {
-                    { "name", t.Name },
-                    { "description", t.Description },
-                    { "input_schema", t.InputSchema }
-                }).ToList())
-            );
-        }
-
-        if (toolChoice != null)
-        {
-            additionalModelRequestFields.Add(
-                "tool_choice", new Document
-                {
-                    { "type", toolChoice.Type },
-                    { "name", toolChoice.Name }
-                }
-            );
+                    Tools = BedrockModelUtilities.GetExtensionDataValue<List<Tool>>(settings.ExtensionData, "tools"),
+                    ToolChoice = BedrockModelUtilities.GetExtensionDataValue<ToolChoice?>(settings.ExtensionData, "tool_choice") // Optional
+                };
+            }
         }
 
         var converseRequest = new ConverseStreamRequest
@@ -196,7 +145,7 @@ internal sealed class AnthropicIOService : IBedrockTextGenerationIOService, IBed
             AdditionalModelRequestFields = additionalModelRequestFields,
             AdditionalModelResponseFieldPaths = new List<string>(),
             GuardrailConfig = null, // Set if needed
-            ToolConfig = null // Set if needed
+            ToolConfig = toolConfig
         };
 
         return converseRequest;

@@ -37,7 +37,7 @@ internal static class ClaudeToolUse
     /// <summary>
     /// (Optional) Specifies how the model should use the provided tools. The model can use a specific tool, any available tool, or decide by itself.
     /// </summary>
-    internal sealed class ClaudeToolChoice
+    internal sealed class ClaudeToolChoice : ToolChoice
     {
         /// <summary>
         /// The type of tool choice. Possible values are any (use any available tool), auto (the model decides), and tool (use the specified tool).

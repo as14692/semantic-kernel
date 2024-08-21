@@ -18,7 +18,7 @@ internal sealed class MetaIOService : IBedrockTextGenerationIOService, IBedrockC
     /// <inheritdoc/>
     public object GetInvokeModelRequestBody(string modelId, string prompt, PromptExecutionSettings? executionSettings)
     {
-        var exec = AmazonLlama3ExecutionSettings.FromExecutionSettings(executionSettings);
+        var exec = AmazonLlama3PromptExecutionSettings.FromExecutionSettings(executionSettings);
         var requestBody = new LlamaRequest.LlamaTextGenerationRequest()
         {
             Prompt = prompt,
@@ -49,7 +49,7 @@ internal sealed class MetaIOService : IBedrockTextGenerationIOService, IBedrockC
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonLlama3ExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonLlama3PromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_gen_len") ?? exec.MaxGenLen;
@@ -93,7 +93,7 @@ internal sealed class MetaIOService : IBedrockTextGenerationIOService, IBedrockC
         var messages = BedrockModelUtilities.BuildMessageList(chatHistory);
         var systemMessages = BedrockModelUtilities.GetSystemMessages(chatHistory);
 
-        var exec = AmazonLlama3ExecutionSettings.FromExecutionSettings(settings);
+        var exec = AmazonLlama3PromptExecutionSettings.FromExecutionSettings(settings);
         var temp = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "temperature") ?? exec.Temperature;
         var topP = BedrockModelUtilities.GetExtensionDataValue<float?>(settings?.ExtensionData, "top_p") ?? exec.TopP;
         var maxTokens = BedrockModelUtilities.GetExtensionDataValue<int?>(settings?.ExtensionData, "max_gen_len") ?? exec.MaxGenLen;
